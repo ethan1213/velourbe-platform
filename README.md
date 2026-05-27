@@ -1,5 +1,69 @@
 # VeloUrbe — Plataforma de Arriendo de Patinetas Eléctricas
 
+---
+
+## El Problema
+
+Las ciudades modernas enfrentan el **problema de la última milla**: los ciudadanos necesitan desplazarse distancias cortas (500 m – 5 km) entre el transporte público y su destino final, pero no tienen medios ágiles ni económicos para hacerlo. Los taxis son caros, el transporte público no cubre el último tramo y caminar toma demasiado tiempo.
+
+Las patinetas eléctricas de arriendo son la solución ideal, pero requieren una **plataforma digital** que gestione en tiempo real:
+- Qué patinetas están disponibles y dónde.
+- Quién tiene arrendada cada patineta.
+- El cobro justo por tiempo de uso.
+- La identidad y autorización de cada usuario.
+
+---
+
+## La Solución
+
+VeloUrbe es una **plataforma de microservicios** diseñada para escalar cada componente de forma independiente:
+
+| Servicio | Responsabilidad | Puerto |
+|---|---|---|
+| **user-auth-service** | Registro, login, gestión de usuarios, emisión de JWT | 8081 |
+| **scooter-rental-service** | Inventario de patinetas, inicio y fin de arriendos | 8082 |
+
+**¿Por qué microservicios?** Si la demanda de arriendos se multiplica por 10, solo escalamos el `scooter-rental-service`. Si se necesita mejorar la autenticación (agregar OAuth, 2FA), solo tocamos el `user-auth-service`. Cada servicio tiene su propia base de datos, puede desplegarse y actualizarse de forma independiente sin afectar al otro.
+
+---
+
+## Comunicación entre Microservicios mediante JWT
+
+El `user-auth-service` genera tokens JWT al hacer login. El `scooter-rental-service` los valida **sin consultar ninguna base de datos adicional**, usando el mismo secret compartido:
+
+```
+CLIENTE                user-auth-service (8081)       scooter-rental-service (8082)
+   │                           │                                    │
+   │── POST /api/auth/login ──►│                                    │
+   │                           │ Valida credenciales en DB          │
+   │                           │ Genera JWT firmado (HS256)         │
+   │◄── { token, role } ───────│                                    │
+   │                                                                │
+   │── POST /api/rentals/start ─────────────────────────────────────►│
+   │   Authorization: Bearer <token>                                 │
+   │                                                          JwtAuthFilter verifica
+   │                                                          la firma del token con
+   │                                                          el mismo secret compartido.
+   │                                                          Sin consulta a BD de usuarios.
+   │                                                          Extrae: email, role, userId
+   │◄── { rental creado } ───────────────────────────────────────────│
+```
+
+**El JWT contiene en su payload:**
+```json
+{
+  "sub": "usuario@velourbe.cl",
+  "role": "CLIENT",
+  "userId": 2,
+  "iat": 1716636000,
+  "exp": 1716639600
+}
+```
+
+Este diseño garantiza que los servicios estén **desacoplados**: el `scooter-rental-service` conoce la identidad del usuario únicamente a través del token, nunca consultando la base de datos de usuarios.
+
+---
+
 VeloUrbe es una plataforma de microservicios construida con **Spring Boot 3.5**, **Java 21** y **Gradle (Kotlin DSL)** que gestiona el arriendo de patinetas eléctricas en la ciudad. Está compuesta por dos servicios completamente independientes que se comunican mediante JWT.
 
 ---
@@ -16,12 +80,13 @@ VeloUrbe es una plataforma de microservicios construida con **Spring Boot 3.5**,
 8. [Flujo de Uso Completo](#8-flujo-de-uso-completo)
 9. [Seguridad y JWT](#9-seguridad-y-jwt)
 10. [Documentación API (Swagger)](#10-documentación-api-swagger)
-11. [Referencia Completa de Endpoints](#11-referencia-completa-de-endpoints)
-12. [Variables de Entorno](#12-variables-de-entorno)
-13. [Migraciones de Base de Datos (Flyway)](#13-migraciones-de-base-de-datos-flyway)
-14. [Roles y Permisos](#14-roles-y-permisos)
-15. [Credenciales por Defecto](#15-credenciales-por-defecto)
-16. [Preguntas Frecuentes](#16-preguntas-frecuentes)
+11. [Colección Postman](#11-colección-postman)
+12. [Referencia Completa de Endpoints](#12-referencia-completa-de-endpoints)
+13. [Variables de Entorno](#13-variables-de-entorno)
+14. [Migraciones de Base de Datos (Flyway)](#14-migraciones-de-base-de-datos-flyway)
+15. [Roles y Permisos](#15-roles-y-permisos)
+16. [Credenciales por Defecto](#16-credenciales-por-defecto)
+17. [Preguntas Frecuentes](#17-preguntas-frecuentes)
 
 ---
 
@@ -535,6 +600,43 @@ El **Payload** decodificado contiene:
 Ambos servicios deben usar **exactamente el mismo secret** en sus `application.yml`. Si cambian el secret en un servicio, debes cambiarlo también en el otro, de lo contrario los tokens generados por `user-auth-service` no podrán ser validados por `scooter-rental-service`.
 
 El secret debe tener **mínimo 32 caracteres** (256 bits) para el algoritmo HS256.
+
+---
+
+## 11. Colección Postman
+
+La carpeta `postman/` contiene dos archivos listos para importar:
+
+| Archivo | Descripción |
+|---|---|
+| `VeloUrbe.postman_collection.json` | Colección con todos los endpoints organizados por servicio |
+| `VeloUrbe.postman_environment.json` | Variables de entorno preconfiguradas para localhost |
+
+### Cómo importar
+
+1. Abre Postman → botón **Import** (esquina superior izquierda).
+2. Arrastra ambos archivos `.json` o navega hasta la carpeta `postman/`.
+3. Selecciona el entorno **"VeloUrbe Local"** en el selector de entornos (esquina superior derecha).
+
+### Variables de entorno incluidas
+
+| Variable | Valor por defecto | Descripción |
+|---|---|---|
+| `auth_url` | `http://localhost:8081` | URL base del user-auth-service |
+| `rental_url` | `http://localhost:8082` | URL base del scooter-rental-service |
+| `token_admin` | *(vacío)* | Token JWT del admin — pegar después del login |
+| `token_client` | *(vacío)* | Token JWT del cliente — pegar después del login |
+| `scooter_id` | `1` | ID de la patineta a usar en los requests |
+| `rental_id` | `1` | ID del arriendo a usar en los requests |
+
+### Endpoints marcados como "Custom Query"
+
+Tres endpoints usan las consultas JPQL personalizadas definidas con `@Query` en los repositorios:
+
+- `GET /api/scooters/low-battery?threshold=30` — usa `ScooterRepository.findByBatteryBelow()`
+- `GET /api/scooters/search?location=plaza` — usa `ScooterRepository.findByLocationContaining()`
+- `GET /api/rentals/long?minMinutes=30` — usa `RentalRepository.findCompletedWithMinDuration()`
+- `GET /api/users/active/{role}` — usa `UserRepository.findActiveByRole()`
 
 ---
 

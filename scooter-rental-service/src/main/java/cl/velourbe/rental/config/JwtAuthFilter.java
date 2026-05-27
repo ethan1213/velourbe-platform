@@ -13,12 +13,28 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Filtro JWT que se ejecuta una vez por request HTTP en el scooter-rental-service.
+ * Valida el token emitido por user-auth-service con {@link JwtTokenValidator}
+ * y registra el usuario (email, rol e ID) en el {@link SecurityContextHolder}.
+ * Permite que {@code SecurityUtils} recupere el ID del usuario sin consultar otra base de datos.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtTokenValidator jwtTokenValidator;
 
+    /**
+     * Lógica principal del filtro: extrae el token del header Authorization,
+     * lo valida y establece la autenticación en el contexto de seguridad.
+     * El {@code userId} extraído del token se almacena en los "details" de la autenticación
+     * para que {@code SecurityUtils.getCurrentUserId()} pueda recuperarlo.
+     *
+     * @param req   request HTTP entrante
+     * @param res   response HTTP saliente
+     * @param chain cadena de filtros de Spring Security
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest req,
                                     HttpServletResponse res,

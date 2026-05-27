@@ -1,0 +1,227 @@
+{
+  "info": {
+    "_postman_id": "velourbe-collection-v1",
+    "name": "VeloUrbe API",
+    "description": "Colección completa de endpoints para la plataforma de microservicios VeloUrbe.\n\nFlujo recomendado:\n1. Ejecutar 'Login Admin' → copiar token → pegar en variable {{token_admin}}\n2. Ejecutar 'Register Client' → copiar token → pegar en variable {{token_client}}\n3. Crear al menos una patineta con 'Create Scooter'\n4. Iniciar arriendo con 'Start Rental' usando token de cliente\n5. Finalizar arriendo con 'End Rental'\n\nVariables de entorno requeridas: auth_url, rental_url, token_admin, token_client",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "auth_url", "value": "http://localhost:8081", "type": "string" },
+    { "key": "rental_url", "value": "http://localhost:8082", "type": "string" },
+    { "key": "token_admin", "value": "", "type": "string" },
+    { "key": "token_client", "value": "", "type": "string" },
+    { "key": "scooter_id", "value": "1", "type": "string" },
+    { "key": "rental_id", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth Service (8081)",
+      "item": [
+        {
+          "name": "Register Client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{auth_url}}/api/auth/register", "host": ["{{auth_url}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@velourbe.cl\",\n  \"password\": \"cliente123\",\n  \"fullName\": \"Juan Pérez\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{auth_url}}/api/auth/login", "host": ["{{auth_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@velourbe.cl\",\n  \"password\": \"admin123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login Client",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{auth_url}}/api/auth/login", "host": ["{{auth_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@velourbe.cl\",\n  \"password\": \"cliente123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Users (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{auth_url}}/api/users", "host": ["{{auth_url}}"], "path": ["api", "users"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Users by Role CLIENT (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{auth_url}}/api/users/active/CLIENT", "host": ["{{auth_url}}"], "path": ["api", "users", "active", "CLIENT"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active Users by Role ADMIN (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{auth_url}}/api/users/active/ADMIN", "host": ["{{auth_url}}"], "path": ["api", "users", "active", "ADMIN"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Scooter Service (8082)",
+      "item": [
+        {
+          "name": "Create Scooter (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "url": { "raw": "{{rental_url}}/api/scooters", "host": ["{{rental_url}}"], "path": ["api", "scooters"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serialCode\": \"SC-001\",\n  \"model\": \"Xiaomi Pro 2\",\n  \"battery\": 85,\n  \"location\": \"Plaza Italia, Santiago\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Scooters (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{rental_url}}/api/scooters", "host": ["{{rental_url}}"], "path": ["api", "scooters"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Scooters (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{rental_url}}/api/scooters/available", "host": ["{{rental_url}}"], "path": ["api", "scooters", "available"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scooter by ID (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{rental_url}}/api/scooters/{{scooter_id}}", "host": ["{{rental_url}}"], "path": ["api", "scooters", "{{scooter_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Low Battery Scooters (ADMIN) — Custom Query",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{rental_url}}/api/scooters/low-battery?threshold=30",
+              "host": ["{{rental_url}}"],
+              "path": ["api", "scooters", "low-battery"],
+              "query": [{ "key": "threshold", "value": "30" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Scooters by Location (ADMIN) — Custom Query",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{rental_url}}/api/scooters/search?location=plaza",
+              "host": ["{{rental_url}}"],
+              "path": ["api", "scooters", "search"],
+              "query": [{ "key": "location", "value": "plaza" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Scooter (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{rental_url}}/api/scooters/{{scooter_id}}", "host": ["{{rental_url}}"], "path": ["api", "scooters", "{{scooter_id}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rental Service (8082)",
+      "item": [
+        {
+          "name": "Start Rental (CLIENT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": { "raw": "{{rental_url}}/api/rentals/start", "host": ["{{rental_url}}"], "path": ["api", "rentals", "start"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scooterId\": {{scooter_id}}\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "End Rental (CLIENT)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{rental_url}}/api/rentals/{{rental_id}}/end", "host": ["{{rental_url}}"], "path": ["api", "rentals", "{{rental_id}}", "end"] }
+          },
+          "response": []
+        },
+        {
+          "name": "My Rentals (CLIENT)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{rental_url}}/api/rentals/my", "host": ["{{rental_url}}"], "path": ["api", "rentals", "my"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Long Rentals (ADMIN) — Custom Query",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{rental_url}}/api/rentals/long?minMinutes=30",
+              "host": ["{{rental_url}}"],
+              "path": ["api", "rentals", "long"],
+              "query": [{ "key": "minMinutes", "value": "30" }]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

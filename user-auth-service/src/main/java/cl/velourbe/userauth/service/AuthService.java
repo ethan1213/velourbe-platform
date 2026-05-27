@@ -9,6 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+/**
+ * Servicio de lógica de negocio para autenticación y registro de usuarios.
+ * Coordina la validación de credenciales, el cifrado de contraseñas
+ * y la generación de tokens JWT mediante {@link JwtUtil}.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -17,6 +22,15 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    /**
+     * Registra un nuevo usuario con rol CLIENT en el sistema.
+     * Verifica que el email no esté ya registrado, hashea la contraseña
+     * con BCrypt y genera un token JWT para uso inmediato.
+     *
+     * @param dto datos del nuevo usuario (email, password, fullName)
+     * @return DTO con el token JWT generado y el rol "CLIENT"
+     * @throws EmailAlreadyExistsException si el email ya está registrado
+     */
     public AuthResponseDTO register(RegisterRequestDTO dto) {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new EmailAlreadyExistsException(dto.getEmail());
@@ -31,6 +45,14 @@ public class AuthService {
         return new AuthResponseDTO(token, saved.getRole());
     }
 
+    /**
+     * Autentica un usuario existente verificando email y contraseña.
+     * La verificación de contraseña compara contra el hash BCrypt almacenado.
+     *
+     * @param dto credenciales de acceso (email y password)
+     * @return DTO con el token JWT generado y el rol del usuario
+     * @throws InvalidCredentialsException si el email no existe o la contraseña no coincide
+     */
     public AuthResponseDTO login(LoginRequestDTO dto) {
         User user = userRepository.findByEmail(dto.getEmail())
                 .orElseThrow(InvalidCredentialsException::new);

@@ -8,6 +8,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.*;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configuración de seguridad del scooter-rental-service.
+ * Define las reglas de acceso por endpoint y registra el filtro JWT
+ * que valida el token en cada request entrante.
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -15,6 +20,17 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
 
+    /**
+     * Define la cadena de filtros de seguridad HTTP:
+     * - Sin CSRF (API stateless)
+     * - Sin sesiones (JWT)
+     * - Swagger accesible sin autenticación
+     * - /api/scooters/** y /api/rentals/long restringidos a ADMIN
+     * - /api/rentals/** requiere autenticación (cualquier rol)
+     *
+     * @param http objeto de configuración de Spring Security
+     * @return cadena de filtros configurada
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -24,6 +40,7 @@ public class SecurityConfig {
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**",
                                  "/swagger-ui.html").permitAll()
                 .requestMatchers("/api/scooters/**").hasRole("ADMIN")
+                .requestMatchers("/api/rentals/long").hasRole("ADMIN")
                 .requestMatchers("/api/rentals/**").authenticated()
                 .anyRequest().authenticated()
             )
