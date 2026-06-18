@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**, /api/users/**
+
+        - id: rental-service
+          uri: ${RENTAL_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/scooters/**, /api/rentals/**
+
+        - id: bff-service
+          uri: ${BFF_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/bff/**
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    cl.velourbe: DEBUG
+    org.springframework.cloud.gateway: INFO

@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: bff-service
+
+server:
+  port: 8083
+
+jwt:
+  secret: ${JWT_SECRET:cambiame-por-un-secret-de-256-bits-minimo-aqui}
+
+services:
+  user-auth:
+    url: ${USER_AUTH_URL:http://localhost:8081}
+  rental:
+    url: ${RENTAL_URL:http://localhost:8082}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always

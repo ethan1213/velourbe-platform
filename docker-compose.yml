@@ -1,0 +1,100 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: velourbe-postgres
+    environment:
+      POSTGRES_USER: velourbe
+      POSTGRES_PASSWORD: velourbe123
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U velourbe"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-auth-service:
+    build: ./user-auth-service
+    container_name: velourbe-user-auth
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/db_scooter_users
+      DB_USERNAME: velourbe
+      DB_PASSWORD: velourbe123
+      JWT_SECRET: ${JWT_SECRET:-velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  scooter-rental-service:
+    build: ./scooter-rental-service
+    container_name: velourbe-rental
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/db_scooter_rentals
+      DB_USERNAME: velourbe
+      DB_PASSWORD: velourbe123
+      JWT_SECRET: ${JWT_SECRET:-velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  bff-service:
+    build: ./bff-service
+    container_name: velourbe-bff
+    ports:
+      - "8083:8083"
+    depends_on:
+      user-auth-service:
+        condition: service_healthy
+      scooter-rental-service:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
+      USER_AUTH_URL: http://user-auth-service:8081
+      RENTAL_URL: http://scooter-rental-service:8082
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: velourbe-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      user-auth-service:
+        condition: service_healthy
+      scooter-rental-service:
+        condition: service_healthy
+      bff-service:
+        condition: service_healthy
+    environment:
+      AUTH_SERVICE_URL: http://user-auth-service:8081
+      RENTAL_SERVICE_URL: http://scooter-rental-service:8082
+      BFF_SERVICE_URL: http://bff-service:8083
+
+volumes:
+  postgres_data:
