@@ -98,8 +98,8 @@ Importa los archivos de la carpeta `postman/`:
 
 | Archivo | Contenido |
 |---|---|
-| `VeloUrbe.postman_collection.json` | Todos los endpoints organizados por servicio |
-| `VeloUrbe.postman_environment.json` | Variables preconfiguradas para localhost |
+| `VeloUrbe.postman_collection.json` | Todos los endpoints organizados por servicio, incluyendo carpetas **BFF (8083)** y **Vía API Gateway (8080)** |
+| `VeloUrbe.postman_environment.json` | Variables preconfiguradas para localhost (`auth_url`, `rental_url`, `bff_url`, `gateway_url`, tokens) |
 
 En Postman: **Import** → selecciona ambos archivos → activa el entorno **"VeloUrbe Local"**.
 
@@ -319,9 +319,38 @@ Con Docker Compose las variables se cargan automáticamente. Sin Docker, los `ap
 
 ---
 
+## Datos de Prueba (DataFaker)
+
+Para poblar las bases de datos con información realista durante el desarrollo, los servicios `user-auth-service` y `scooter-rental-service` incluyen un `DataLoader` (`net.datafaker`) que se ejecuta **solo bajo el perfil `dev`** y únicamente si las tablas están vacías (no afecta producción ni Docker).
+
+```bash
+# Levantar un servicio con datos falsos
+cd scooter-rental-service && SPRING_PROFILES_ACTIVE=dev gradle bootRun
+cd user-auth-service     && SPRING_PROFILES_ACTIVE=dev gradle bootRun
+```
+
+| Servicio | Genera |
+|---|---|
+| user-auth-service | 10 usuarios `CLIENT` (password `cliente123`) |
+| scooter-rental-service | 15 patinetas + 10 arriendos de muestra |
+
+---
+
 ## Tests Unitarios
 
-Los tests están en `src/test/` de cada servicio y usan `@ExtendWith(MockitoExtension.class)` sin levantar contexto Spring.
+Los tests están en `src/test/` de cada servicio. Hay tres niveles:
+
+- **Servicio** (`@ExtendWith(MockitoExtension.class)`): lógica de negocio con dependencias simuladas, sin contexto Spring.
+- **Controller** (`MockMvc` standalone + Mockito): mapeo HTTP, códigos de estado y serialización.
+- **Contexto** (`@SpringBootTest @ActiveProfiles("test")`): verifica que el contexto levanta usando una base de datos **H2 en memoria** (`application-test.yml`), por lo que la suite corre sin PostgreSQL.
+
+```bash
+# Ejecutar toda la suite (no requiere PostgreSQL)
+cd user-auth-service     && gradle test
+cd scooter-rental-service && gradle test
+```
+
+El perfil `test` (`src/test/resources/application-test.yml`) usa H2, desactiva Flyway y aplica `ddl-auto=create-drop`, separando la base de pruebas de la de desarrollo.
 
 **Ejecutar con Docker (no requiere instalación local de Gradle):**
 ```bash
@@ -345,6 +374,10 @@ docker run --rm --network velourbe-platform_default \
 | user-auth-service | `UserServiceTest` | findAll, findById existente, findById no encontrado, count |
 | scooter-rental-service | `ScooterServiceTest` | crear, listar, findById, disponibles, batería baja, buscar ubicación, eliminar |
 | scooter-rental-service | `RentalServiceTest` | iniciar, finalizar, mis arriendos, arriendos largos, scooter no disponible |
+| user-auth-service | `AuthControllerTest` | register 201, login 200, credenciales inválidas 401 |
+| user-auth-service | `UserControllerTest` | listar usuarios, usuarios activos por rol |
+| scooter-rental-service | `ScooterControllerTest` | listar, crear 201, detalle, no encontrado 404, eliminar 204 |
+| scooter-rental-service | `RentalControllerTest` | iniciar 201, finalizar 200, no encontrado 404, mis arriendos |
 
 ---
 
@@ -394,6 +427,8 @@ docker logs -f velourbe-bff            # logs del BFF
 | Spring HATEOAS | (Boot) | Links en respuestas REST |
 | Spring WebFlux | (Boot) | WebClient en BFF |
 | Flyway | (Boot) | Migraciones SQL versionadas |
+| DataFaker | 2.4.2 | Generación de datos de prueba (perfil dev) |
+| H2 | (test) | Base de datos en memoria para los tests |
 | PostgreSQL | 16 | Base de datos relacional |
 | JJWT | 0.12.6 | Generación y validación JWT (HS256) |
 | Lombok | 1.18.34 | Reducción de boilerplate |

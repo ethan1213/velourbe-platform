@@ -8,6 +8,8 @@
   "variable": [
     { "key": "auth_url", "value": "http://localhost:8081", "type": "string" },
     { "key": "rental_url", "value": "http://localhost:8082", "type": "string" },
+    { "key": "bff_url", "value": "http://localhost:8083", "type": "string" },
+    { "key": "gateway_url", "value": "http://localhost:8080", "type": "string" },
     { "key": "token_admin", "value": "", "type": "string" },
     { "key": "token_client", "value": "", "type": "string" },
     { "key": "scooter_id", "value": "1", "type": "string" },
@@ -218,6 +220,76 @@
               "path": ["api", "rentals", "long"],
               "query": [{ "key": "minMinutes", "value": "30" }]
             }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "BFF Service (8083)",
+      "description": "El BFF agrega datos de los microservicios en una sola respuesta. Requiere token JWT.",
+      "item": [
+        {
+          "name": "Dashboard (CLIENT)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{bff_url}}/api/bff/dashboard", "host": ["{{bff_url}}"], "path": ["api", "bff", "dashboard"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Available Scooters (CLIENT)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{bff_url}}/api/bff/scooters/available", "host": ["{{bff_url}}"], "path": ["api", "bff", "scooters", "available"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Rental Summary (CLIENT)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{bff_url}}/api/bff/rental-summary", "host": ["{{bff_url}}"], "path": ["api", "bff", "rental-summary"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Vía API Gateway (8080)",
+      "description": "Punto de entrada único de la plataforma. Todas las peticiones se enrutan a través del gateway.",
+      "item": [
+        {
+          "name": "Login Admin (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{gateway_url}}/api/auth/login", "host": ["{{gateway_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@velourbe.cl\",\n  \"password\": \"admin123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Available Scooters (Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{gateway_url}}/api/scooters/available", "host": ["{{gateway_url}}"], "path": ["api", "scooters", "available"] }
+          },
+          "response": []
+        },
+        {
+          "name": "BFF Dashboard (Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{gateway_url}}/api/bff/dashboard", "host": ["{{gateway_url}}"], "path": ["api", "bff", "dashboard"] }
           },
           "response": []
         }
