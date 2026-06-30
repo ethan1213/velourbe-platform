@@ -1,0 +1,6 @@
+# Tratar binarios sin conversion de fin de linea
+*.pdf  binary
+*.pptx binary
+*.png  binary
+*.jpg  binary
+*.jar  binary
