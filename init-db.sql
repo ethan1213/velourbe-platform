@@ -24,3 +24,9 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'db_scooter_maintenanc
 
 SELECT 'CREATE DATABASE db_scooter_support'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'db_scooter_support')\gexec
+
+SELECT 'CREATE DATABASE db_scooter_stations'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'db_scooter_stations')\gexec
+
+SELECT 'CREATE DATABASE db_scooter_reviews'
+WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'db_scooter_reviews')\gexec

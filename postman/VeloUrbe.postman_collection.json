@@ -644,6 +644,168 @@
       ]
     },
     {
+      "name": "Station Service (8090)",
+      "item": [
+        {
+          "name": "Crear estación (ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Estación Plaza Italia\",\n  \"address\": \"Av. Providencia 1\",\n  \"latitude\": -33.4372,\n  \"longitude\": -70.6344,\n  \"capacity\": 10\n}" },
+            "url": { "raw": "{{station_url}}/api/stations", "host": ["{{station_url}}"], "path": ["api", "stations"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar estaciones",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{station_url}}/api/stations", "host": ["{{station_url}}"], "path": ["api", "stations"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle de estación",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{station_url}}/api/stations/{{station_id}}", "host": ["{{station_url}}"], "path": ["api", "stations", "{{station_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Estaciones cercanas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{station_url}}/api/stations/nearby?latitude=-33.4372&longitude=-70.6344&radiusKm=2", "host": ["{{station_url}}"], "path": ["api", "stations", "nearby"], "query": [ { "key": "latitude", "value": "-33.4372" }, { "key": "longitude", "value": "-70.6344" }, { "key": "radiusKm", "value": "2" } ] }
+          },
+          "response": []
+        },
+        {
+          "name": "Dock (estacionar patineta)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{station_url}}/api/stations/{{station_id}}/dock", "host": ["{{station_url}}"], "path": ["api", "stations", "{{station_id}}", "dock"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Undock (retirar patineta)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{station_url}}/api/stations/{{station_id}}/undock", "host": ["{{station_url}}"], "path": ["api", "stations", "{{station_id}}", "undock"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Mantención (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{station_url}}/api/stations/{{station_id}}/maintenance", "host": ["{{station_url}}"], "path": ["api", "stations", "{{station_id}}", "maintenance"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reactivar (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{station_url}}/api/stations/{{station_id}}/activate", "host": ["{{station_url}}"], "path": ["api", "stations", "{{station_id}}", "activate"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar estación (ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{station_url}}/api/stations/{{station_id}}", "host": ["{{station_url}}"], "path": ["api", "stations", "{{station_id}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Review Service (8091)",
+      "item": [
+        {
+          "name": "Crear reseña",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"rentalId\": {{rental_id}},\n  \"scooterId\": {{scooter_id}},\n  \"rating\": 5,\n  \"comment\": \"Excelente estado y batería\"\n}" },
+            "url": { "raw": "{{review_url}}/api/reviews", "host": ["{{review_url}}"], "path": ["api", "reviews"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Mis reseñas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{review_url}}/api/reviews/my", "host": ["{{review_url}}"], "path": ["api", "reviews", "my"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Detalle de reseña",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{review_url}}/api/reviews/{{review_id}}", "host": ["{{review_url}}"], "path": ["api", "reviews", "{{review_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Reseñas de una patineta",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{review_url}}/api/reviews/scooter/{{scooter_id}}", "host": ["{{review_url}}"], "path": ["api", "reviews", "scooter", "{{scooter_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Rating promedio de una patineta",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{review_url}}/api/reviews/scooter/{{scooter_id}}/rating", "host": ["{{review_url}}"], "path": ["api", "reviews", "scooter", "{{scooter_id}}", "rating"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar todas (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{review_url}}/api/reviews", "host": ["{{review_url}}"], "path": ["api", "reviews"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar reseña",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{review_url}}/api/reviews/{{review_id}}", "host": ["{{review_url}}"], "path": ["api", "reviews", "{{review_id}}"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "BFF Service (8083)",
       "description": "El BFF agrega datos de los microservicios en una sola respuesta. Requiere token JWT.",
       "item": [

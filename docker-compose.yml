@@ -1,22 +1,63 @@
+# Arquitectura: Cliente -> API Gateway (8080) -> BFF (8083) -> 10 microservicios.
+# El Gateway va primero y solo enruta hacia el BFF; el BFF apunta a todos los
+# microservicios. El orden de arranque real lo controlan los depends_on.
 services:
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: velourbe-postgres
-    environment:
-      POSTGRES_USER: velourbe
-      POSTGRES_PASSWORD: velourbe123
-      POSTGRES_DB: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+  api-gateway:
+    build: ./api-gateway
+    container_name: velourbe-gateway
     ports:
-      - "5432:5432"
+      - "8080:8080"
+    depends_on:
+      bff-service:
+        condition: service_healthy
+    environment:
+      BFF_SERVICE_URL: http://bff-service:8083
+
+  bff-service:
+    build: ./bff-service
+    container_name: velourbe-bff
+    ports:
+      - "8083:8083"
+    depends_on:
+      user-auth-service:
+        condition: service_healthy
+      scooter-rental-service:
+        condition: service_healthy
+      payment-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
+      analytics-service:
+        condition: service_healthy
+      logistics-service:
+        condition: service_healthy
+      maintenance-service:
+        condition: service_healthy
+      support-service:
+        condition: service_healthy
+      station-service:
+        condition: service_healthy
+      review-service:
+        condition: service_healthy
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
+      USER_AUTH_URL: http://user-auth-service:8081
+      RENTAL_URL: http://scooter-rental-service:8082
+      PAYMENT_URL: http://payment-service:8084
+      NOTIFICATION_URL: http://notification-service:8085
+      ANALYTICS_URL: http://analytics-service:8086
+      LOGISTICS_URL: http://logistics-service:8087
+      MAINTENANCE_URL: http://maintenance-service:8088
+      SUPPORT_URL: http://support-service:8089
+      STATION_URL: http://station-service:8090
+      REVIEW_URL: http://review-service:8091
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U velourbe -d postgres"]
-      interval: 10s
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      interval: 15s
       timeout: 5s
       retries: 5
+      start_period: 30s
 
   user-auth-service:
     build: ./user-auth-service
@@ -178,79 +219,63 @@ services:
       retries: 5
       start_period: 30s
 
-  bff-service:
-    build: ./bff-service
-    container_name: velourbe-bff
+  station-service:
+    build: ./station-service
+    container_name: velourbe-station
     ports:
-      - "8083:8083"
+      - "8090:8090"
     depends_on:
-      user-auth-service:
-        condition: service_healthy
-      scooter-rental-service:
-        condition: service_healthy
-      payment-service:
-        condition: service_healthy
-      notification-service:
-        condition: service_healthy
-      analytics-service:
-        condition: service_healthy
-      logistics-service:
-        condition: service_healthy
-      maintenance-service:
-        condition: service_healthy
-      support-service:
+      postgres:
         condition: service_healthy
     environment:
+      DB_URL: jdbc:postgresql://postgres:5432/db_scooter_stations
+      DB_USERNAME: velourbe
+      DB_PASSWORD: velourbe123
       JWT_SECRET: ${JWT_SECRET:-velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
-      USER_AUTH_URL: http://user-auth-service:8081
-      RENTAL_URL: http://scooter-rental-service:8082
-      PAYMENT_URL: http://payment-service:8084
-      NOTIFICATION_URL: http://notification-service:8085
-      ANALYTICS_URL: http://analytics-service:8086
-      LOGISTICS_URL: http://logistics-service:8087
-      MAINTENANCE_URL: http://maintenance-service:8088
-      SUPPORT_URL: http://support-service:8089
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8083/actuator/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/actuator/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 30s
 
-  api-gateway:
-    build: ./api-gateway
-    container_name: velourbe-gateway
+  review-service:
+    build: ./review-service
+    container_name: velourbe-review
     ports:
-      - "8080:8080"
+      - "8091:8091"
     depends_on:
-      user-auth-service:
-        condition: service_healthy
-      scooter-rental-service:
-        condition: service_healthy
-      payment-service:
-        condition: service_healthy
-      notification-service:
-        condition: service_healthy
-      analytics-service:
-        condition: service_healthy
-      logistics-service:
-        condition: service_healthy
-      maintenance-service:
-        condition: service_healthy
-      support-service:
-        condition: service_healthy
-      bff-service:
+      postgres:
         condition: service_healthy
     environment:
-      AUTH_SERVICE_URL: http://user-auth-service:8081
-      RENTAL_SERVICE_URL: http://scooter-rental-service:8082
-      PAYMENT_SERVICE_URL: http://payment-service:8084
-      NOTIFICATION_SERVICE_URL: http://notification-service:8085
-      ANALYTICS_SERVICE_URL: http://analytics-service:8086
-      LOGISTICS_SERVICE_URL: http://logistics-service:8087
-      MAINTENANCE_SERVICE_URL: http://maintenance-service:8088
-      SUPPORT_SERVICE_URL: http://support-service:8089
-      BFF_SERVICE_URL: http://bff-service:8083
+      DB_URL: jdbc:postgresql://postgres:5432/db_scooter_reviews
+      DB_USERNAME: velourbe
+      DB_PASSWORD: velourbe123
+      JWT_SECRET: ${JWT_SECRET:-velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8091/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: velourbe-postgres
+    environment:
+      POSTGRES_USER: velourbe
+      POSTGRES_PASSWORD: velourbe123
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U velourbe -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

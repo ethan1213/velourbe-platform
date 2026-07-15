@@ -8,15 +8,28 @@ server:
 jwt:
   secret: ${JWT_SECRET:velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
 
+# El BFF apunta a TODOS los microservicios de la plataforma.
 services:
   user-auth:
     url: ${USER_AUTH_URL:http://localhost:8081}
   rental:
     url: ${RENTAL_URL:http://localhost:8082}
-  support:
-    url: ${SUPPORT_URL:http://localhost:8089}
+  payment:
+    url: ${PAYMENT_URL:http://localhost:8084}
+  notification:
+    url: ${NOTIFICATION_URL:http://localhost:8085}
+  analytics:
+    url: ${ANALYTICS_URL:http://localhost:8086}
+  logistics:
+    url: ${LOGISTICS_URL:http://localhost:8087}
   maintenance:
     url: ${MAINTENANCE_URL:http://localhost:8088}
+  support:
+    url: ${SUPPORT_URL:http://localhost:8089}
+  station:
+    url: ${STATION_URL:http://localhost:8090}
+  review:
+    url: ${REVIEW_URL:http://localhost:8091}
 
 springdoc:
   swagger-ui:

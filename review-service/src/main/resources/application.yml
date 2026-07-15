@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: review-service
+  profiles:
+    active: dev
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/db_scooter_reviews}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  flyway:
+    locations: classpath:db/migration
+    enabled: true
+  autoconfigure:
+    exclude:
+      - org.springdoc.core.configuration.SpringDocHateoasConfiguration
+
+server:
+  port: 8091
+  servlet:
+    context-path: /
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    cl.velourbe: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %logger{36} - %msg%n"
+
+jwt:
+  secret: ${JWT_SECRET:velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
+  expiration-ms: 3600000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true

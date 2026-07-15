@@ -39,4 +39,13 @@ public class WebClientConfig {
     public WebClient maintenanceClient() {
         return WebClient.builder().baseUrl(maintenanceUrl).build();
     }
+
+    /**
+     * WebClient sin baseUrl usado por el ProxyController para reenviar
+     * peticiones a cualquier microservicio según la tabla de rutas.
+     */
+    @Bean("proxyClient")
+    public WebClient proxyClient() {
+        return WebClient.builder().build();
+    }
 }
