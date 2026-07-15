@@ -13,6 +13,17 @@ services:
         condition: service_healthy
     environment:
       BFF_SERVICE_URL: http://bff-service:8083
+      # URLs usadas solo por las rutas /docs/* del Swagger centralizado
+      AUTH_SERVICE_URL: http://user-auth-service:8081
+      RENTAL_SERVICE_URL: http://scooter-rental-service:8082
+      PAYMENT_SERVICE_URL: http://payment-service:8084
+      NOTIFICATION_SERVICE_URL: http://notification-service:8085
+      ANALYTICS_SERVICE_URL: http://analytics-service:8086
+      LOGISTICS_SERVICE_URL: http://logistics-service:8087
+      MAINTENANCE_SERVICE_URL: http://maintenance-service:8088
+      SUPPORT_SERVICE_URL: http://support-service:8089
+      STATION_SERVICE_URL: http://station-service:8090
+      REVIEW_SERVICE_URL: http://review-service:8091
 
   bff-service:
     build: ./bff-service

@@ -52,6 +52,30 @@ El flujo es en capas: el **API Gateway** va primero como único punto de entrada
 
 El BFF no cuenta como microservicio de dominio: la plataforma tiene **10 microservicios funcionales** más el Gateway y el BFF.
 
+### Patrón CSR (Controller → Service → Repository)
+
+Todos los microservicios siguen el patrón de capas CSR:
+
+```
+HTTP Request
+    │
+┌───▼────────────┐   Recibe la petición, valida el DTO de entrada y
+│   Controller    │   arma la respuesta HTTP (códigos, HATEOAS links).
+└───┬────────────┘   No contiene lógica de negocio.
+    │
+┌───▼────────────┐   Lógica de negocio: reglas, validaciones de dominio,
+│    Service      │   transacciones (@Transactional) y mapeo entidad ↔ DTO.
+└───┬────────────┘   Único punto de acceso al repositorio.
+    │
+┌───▼────────────┐   Acceso a datos con Spring Data JPA.
+│   Repository    │   Solo queries; sin lógica de negocio.
+└───┬────────────┘
+    │
+PostgreSQL (BD propia por servicio)
+```
+
+Ningún controller inyecta repositorios directamente: toda operación pasa por la capa de servicio. El BFF sigue la variante Controller → Service (sin Repository) porque no tiene base de datos propia: sus "datos" son las respuestas de los otros microservicios.
+
 ---
 
 ## Inicio Rápido (Docker)
@@ -394,7 +418,17 @@ El BFF cumple dos roles:
 
 ## Swagger / OpenAPI
 
-Cada servicio tiene su propia documentación interactiva:
+### Swagger centralizado (Gateway)
+
+Toda la documentación está agrupada en un solo Swagger UI servido por el API Gateway:
+
+**http://localhost:8080/swagger-ui.html**
+
+El selector "Select a definition" (arriba a la derecha) permite cambiar entre la documentación de los 10 microservicios y el BFF. El Gateway expone cada `/v3/api-docs` bajo `/docs/{servicio}` mediante rutas de configuración (sin código), manteniendo el principio de que el Gateway solo enruta.
+
+### Swagger por servicio
+
+Además, cada servicio mantiene su propia documentación interactiva:
 
 - **user-auth-service:** http://localhost:8081/swagger-ui.html
 - **scooter-rental-service:** http://localhost:8082/swagger-ui.html
