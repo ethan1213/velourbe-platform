@@ -7,43 +7,38 @@ Plataforma de microservicios construida con **Spring Boot 3.5**, **Java 21** y *
 ## Arquitectura
 
 ```
-                    Cliente (Postman / App)
-                            │
-                     Puerto 8080
-                            │
-                ┌───────────▼───────────┐
-                │      API Gateway      │  Spring Cloud Gateway
-                │   Enrutamiento CORS   │  Logging de requests
-                └──────────┬────────────┘
-                           │
-          ┌────────────────┼────────────────┐
-          │                │                │
-   Puerto 8081      Puerto 8082      Puerto 8083
-          │                │                │
-┌─────────▼──────┐ ┌───────▼──────┐ ┌──────▼──────────┐
-│ user-auth-     │ │ scooter-     │ │  bff-service    │
-│ service        │ │ rental-      │ │                 │
-│                │ │ service      │ │  Dashboard      │
-│ Registro/Login │ │              │ │  Resumen        │
-│ JWT / HATEOAS  │ │ Patinetas    │ │  Scooters       │
-│ Flyway         │ │ Arriendos    │ │  (agrega datos  │
-│ Tests          │ │ HATEOAS      │ │   de los otros  │
-└────────┬───────┘ │ Flyway/Tests │ │   servicios)    │
-         │         └───────┬──────┘ └──────────────────┘
-         │                 │               │  │
-  ┌──────▼──────┐   ┌──────▼──────┐       │  │
-  │db_scooter_  │   │db_scooter_  │◄──────┘  │
-  │users        │   │rentals      │◄──────────┘
-  │(PostgreSQL) │   │(PostgreSQL) │  WebClient
-  └─────────────┘   └─────────────┘
+                         Cliente (Postman / App)
+                                 │
+                          Puerto 8080
+                                 │
+                     ┌───────────▼───────────┐
+                     │      API Gateway      │  Spring Cloud Gateway
+                     │   Enrutamiento CORS   │  Logging de requests
+                     └───────────┬───────────┘
+                                 │
+     ┌───────────┬───────────┬───┴───┬───────────┬───────────┐
+     │           │           │       │           │           │
+   8081        8082        8083    8084        8085        8086
+ user-auth  scooter-rental  bff  payment  notification  analytics
+     │           │           │       │           │           │
+   8087        8088        8089
+ logistics  maintenance  support
+     │           │           │
+     └───────────┴───────────┴──► PostgreSQL (una BD por servicio)
 ```
 
 | Servicio | Puerto | Responsabilidad |
 |---|---|---|
-| **api-gateway** | 8080 | Punto de entrada único, CORS, logging |
+| **api-gateway** | 8080 | Punto de entrada único, CORS, logging y enrutamiento |
 | **user-auth-service** | 8081 | Registro, login, JWT, gestión de usuarios |
-| **scooter-rental-service** | 8082 | Inventario de patinetas, arriendos |
-| **bff-service** | 8083 | Dashboard y resumen agregado para el frontend |
+| **scooter-rental-service** | 8082 | Inventario de patinetas y arriendos |
+| **bff-service** | 8083 | Dashboard y vistas agregadas para el frontend |
+| **payment-service** | 8084 | Pagos de arriendos (procesar, completar, cancelar, reembolsar) |
+| **notification-service** | 8085 | Notificaciones EMAIL/SMS e historial por usuario |
+| **analytics-service** | 8086 | Eventos de arriendo y estadísticas de usuario/sistema |
+| **logistics-service** | 8087 | Ubicación GPS de patinetas y búsqueda por área |
+| **maintenance-service** | 8088 | Issues de mantención de patinetas (reporte y ciclo de vida) |
+| **support-service** | 8089 | Tickets de soporte al cliente |
 
 ---
 
@@ -80,12 +75,24 @@ Content-Type: application/json
 # 1. Crear bases de datos
 psql -U postgres -c "CREATE DATABASE db_scooter_users;"
 psql -U postgres -c "CREATE DATABASE db_scooter_rentals;"
+psql -U postgres -c "CREATE DATABASE db_scooter_payments;"
+psql -U postgres -c "CREATE DATABASE db_scooter_notifications;"
+psql -U postgres -c "CREATE DATABASE db_scooter_analytics;"
+psql -U postgres -c "CREATE DATABASE db_scooter_logistics;"
+psql -U postgres -c "CREATE DATABASE db_scooter_maintenance;"
+psql -U postgres -c "CREATE DATABASE db_scooter_support;"
 
 # 2. Levantar cada servicio en una terminal distinta
-cd user-auth-service   && gradle bootRun   # terminal 1
-cd scooter-rental-service && gradle bootRun  # terminal 2
-cd bff-service         && gradle bootRun   # terminal 3
-cd api-gateway         && gradle bootRun   # terminal 4
+cd user-auth-service       && gradle bootRun  # 8081
+cd scooter-rental-service  && gradle bootRun  # 8082
+cd payment-service         && gradle bootRun  # 8084
+cd notification-service    && gradle bootRun  # 8085
+cd analytics-service       && gradle bootRun  # 8086
+cd logistics-service       && gradle bootRun  # 8087
+cd maintenance-service     && gradle bootRun  # 8088
+cd support-service         && gradle bootRun  # 8089
+cd bff-service             && gradle bootRun  # 8083
+cd api-gateway             && gradle bootRun  # 8080
 ```
 
 Los `application.yml` tienen valores por defecto apuntando a `localhost:5432` con usuario `postgres`/`postgres`. No se necesitan variables de entorno.
@@ -195,16 +202,100 @@ El punto de entrada es siempre el Gateway en el puerto **8080**.
 
 ---
 
+### Pagos (`/api/payments`)
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| `POST` | `/api/payments` | Autenticado | Procesa un pago de arriendo |
+| `GET` | `/api/payments/{id}` | Autenticado | Detalle de un pago |
+| `GET` | `/api/payments/history` | Autenticado | Historial de pagos del usuario |
+| `PATCH` | `/api/payments/{id}/complete` | Autenticado | Completa un pago pendiente |
+| `PATCH` | `/api/payments/{id}/cancel` | Autenticado | Cancela un pago pendiente |
+| `PATCH` | `/api/payments/{id}/refund` | Autenticado | Reembolsa un pago completado |
+
+**Crear pago — body:**
+```json
+{ "rentalId": 1, "amount": 2500, "paymentMethod": "CARD", "notes": "Pago arriendo" }
+```
+
+---
+
+### Analytics (`/api/analytics`)
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| `POST` | `/api/analytics/rental?rentalId=1&amount=2500` | Autenticado | Registra un evento de arriendo |
+| `GET` | `/api/analytics/user/{userId}` | Autenticado | Estadísticas de un usuario |
+| `GET` | `/api/analytics/system` | Autenticado | Estadísticas globales del sistema |
+
+---
+
+### Mantención (`/api/maintenance/issues`)
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| `POST` | `/api/maintenance/issues` | Autenticado | Reporta un issue de mantención |
+| `GET` | `/api/maintenance/issues/{id}` | Autenticado | Detalle de un issue |
+| `GET` | `/api/maintenance/issues` | ADMIN | Lista issues (filtro opcional `?status=`) |
+| `GET` | `/api/maintenance/issues/scooter/{scooterId}` | Autenticado | Issues de una patineta |
+| `PATCH` | `/api/maintenance/issues/{id}/review` | ADMIN | Marca en revisión |
+| `PATCH` | `/api/maintenance/issues/{id}/start` | ADMIN | Inicia el trabajo |
+| `PATCH` | `/api/maintenance/issues/{id}/resolve` | ADMIN | Resuelve el issue |
+| `PATCH` | `/api/maintenance/issues/{id}/close` | ADMIN | Cierra el issue |
+
+**Crear issue — body:**
+```json
+{ "scooterId": 1, "issueType": "BRAKE", "description": "Freno delantero flojo" }
+```
+
+---
+
+### Soporte (`/api/support/tickets`)
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| `POST` | `/api/support/tickets` | Autenticado | Crea un ticket de soporte |
+| `GET` | `/api/support/tickets/my` | Autenticado | Mis tickets |
+| `GET` | `/api/support/tickets/{id}` | Autenticado | Detalle de un ticket |
+| `GET` | `/api/support/tickets` | ADMIN | Lista todos los tickets |
+| `PATCH` | `/api/support/tickets/{id}/assign` | ADMIN | Asigna el ticket |
+| `PATCH` | `/api/support/tickets/{id}/resolve` | ADMIN | Resuelve el ticket |
+| `PATCH` | `/api/support/tickets/{id}/close` | Autenticado | Cierra el ticket |
+
+**Crear ticket — body:**
+```json
+{
+  "rentalId": 1,
+  "subject": "Cobro incorrecto",
+  "description": "Se cobró de más al finalizar",
+  "priority": "MEDIUM",
+  "category": "BILLING"
+}
+```
+
+---
+
+### Notificaciones y logística
+
+El Gateway enruta `/api/notifications/**` → **notification-service** (8085) y `/api/logistics/**` → **logistics-service** (8087).
+
+| Servicio | Dominio |
+|---|---|
+| **notification-service** | Envío EMAIL/SMS, historial por usuario y marcado como leído |
+| **logistics-service** | Registro/consulta de ubicación GPS y búsqueda de patinetas por radio |
+
+---
+
 ### BFF — Backend for Frontend (`/api/bff`)
 
-El BFF agrega datos de los dos microservicios en una sola respuesta. Requiere token JWT.
+El BFF agrega datos de los microservicios en una sola respuesta. Requiere token JWT.
 
 | Método | Ruta | Descripción |
 |---|---|---|
 | `GET` | `/api/bff/dashboard` | Perfil del usuario + arriendos activos + recientes |
 | `GET` | `/api/bff/scooters/available` | Scooters disponibles con todos sus datos |
 | `GET` | `/api/bff/rental-summary` | Resumen estadístico de arriendos del usuario |
-| `GET` | `/api/bff/scooters` | Todas las patinetas (solo ADMIN) |
+| `GET` | `/api/bff/maintenance/issues` | Issues de mantención (proxy a maintenance-service) |
 
 **Dashboard — respuesta:**
 ```json
@@ -231,9 +322,12 @@ El BFF agrega datos de los dos microservicios en una sola respuesta. Requiere to
 | Iniciar / finalizar arriendo | ❌ | ✅ | ✅ |
 | Ver mis arriendos | ❌ | ✅ | ✅ |
 | Usar BFF (dashboard, resumen) | ❌ | ✅ | ✅ |
+| Pagos / analytics / tickets propios | ❌ | ✅ | ✅ |
+| Reportar issue de mantención | ❌ | ✅ | ✅ |
 | Gestionar patinetas (CRUD) | ❌ | ❌ | ✅ |
 | Ver todos los usuarios | ❌ | ❌ | ✅ |
 | Ver arriendos largos | ❌ | ❌ | ✅ |
+| Gestionar mantención / soporte (admin) | ❌ | ❌ | ✅ |
 | Swagger UI | ✅ | ✅ | ✅ |
 
 ---
@@ -245,6 +339,12 @@ Cada servicio tiene su propia documentación interactiva:
 - **user-auth-service:** http://localhost:8081/swagger-ui.html
 - **scooter-rental-service:** http://localhost:8082/swagger-ui.html
 - **bff-service:** http://localhost:8083/swagger-ui.html
+- **payment-service:** http://localhost:8084/swagger-ui.html
+- **notification-service:** http://localhost:8085/swagger-ui.html
+- **analytics-service:** http://localhost:8086/swagger-ui.html
+- **logistics-service:** http://localhost:8087/swagger-ui.html
+- **maintenance-service:** http://localhost:8088/swagger-ui.html
+- **support-service:** http://localhost:8089/swagger-ui.html
 
 Para autenticarse en Swagger: login → copia el `token` → botón **Authorize** → escribe `Bearer <token>`.
 
@@ -252,12 +352,18 @@ Para autenticarse en Swagger: login → copia el `token` → botón **Authorize*
 
 ## Base de Datos y Migraciones
 
-**Flyway** crea las tablas automáticamente al arrancar cada servicio.
+**Flyway** crea las tablas automáticamente al arrancar los servicios que lo usan. Algunos servicios (`analytics`, `notification`, `logistics`) usan `ddl-auto: update` de JPA.
 
-| Servicio | Base de datos | Migraciones |
+| Servicio | Base de datos | Esquema / migraciones |
 |---|---|---|
-| user-auth-service | `db_scooter_users` | V1 tabla users, V2 seed admin, V3 fix password |
-| scooter-rental-service | `db_scooter_rentals` | V1 tabla scooters, V2 tabla rentals |
+| user-auth-service | `db_scooter_users` | Flyway V1 users, V2 seed admin, V3 fix password |
+| scooter-rental-service | `db_scooter_rentals` | Flyway V1 scooters, V2 rentals |
+| payment-service | `db_scooter_payments` | Flyway V1 payments |
+| notification-service | `db_scooter_notifications` | JPA → `notifications` |
+| analytics-service | `db_scooter_analytics` | JPA → `analytics_events` |
+| logistics-service | `db_scooter_logistics` | JPA → `scooter_locations` |
+| maintenance-service | `db_scooter_maintenance` | Flyway V1 maintenance_issues |
+| support-service | `db_scooter_support` | Flyway V1 support_tickets |
 
 **Esquema `users`:**
 ```
@@ -272,6 +378,36 @@ id • serial_code (UNIQUE) • model • battery (0-100) • location • statu
 **Esquema `rentals`:**
 ```
 id • user_id • scooter_id (FK) • started_at • ended_at • status • total_minutes
+```
+
+**Esquema `payments`:**
+```
+id • rental_id • user_id • amount • currency • status • transaction_id • payment_method • notes • created_at • updated_at
+```
+
+**Esquema `notifications`:**
+```
+id • user_id • type (EMAIL/SMS) • message • sent • created_at
+```
+
+**Esquema `analytics_events`:**
+```
+id • rental_id • user_id • amount • event_type • description • created_at
+```
+
+**Esquema `scooter_locations`:**
+```
+id • scooter_id (UNIQUE) • latitude • longitude • created_at • updated_at
+```
+
+**Esquema `maintenance_issues`:**
+```
+id • scooter_id • issue_type • description • status • resolution_notes • created_at • updated_at • resolved_at
+```
+
+**Esquema `support_tickets`:**
+```
+id • user_id • rental_id • subject • description • status • priority • category • assigned_to • resolution_notes • created_at • updated_at
 ```
 
 > Nunca modifiques archivos de migración ya ejecutados. Para cambios, crea `V3__descripcion.sql`, etc.
@@ -326,7 +462,7 @@ Para poblar las bases de datos con información realista durante el desarrollo, 
 ```bash
 # Levantar un servicio con datos falsos
 cd scooter-rental-service && SPRING_PROFILES_ACTIVE=dev gradle bootRun
-cd user-auth-service     && SPRING_PROFILES_ACTIVE=dev gradle bootRun
+cd user-auth-service      && SPRING_PROFILES_ACTIVE=dev gradle bootRun
 ```
 
 | Servicio | Genera |
@@ -346,8 +482,9 @@ Los tests están en `src/test/` de cada servicio. Hay tres niveles:
 
 ```bash
 # Ejecutar toda la suite (no requiere PostgreSQL)
-cd user-auth-service     && gradle test
+cd user-auth-service      && gradle test
 cd scooter-rental-service && gradle test
+cd payment-service        && gradle test
 ```
 
 El perfil `test` (`src/test/resources/application-test.yml`) usa H2, desactiva Flyway y aplica `ddl-auto=create-drop`, separando la base de pruebas de la de desarrollo.
@@ -378,6 +515,7 @@ docker run --rm --network velourbe-platform_default \
 | user-auth-service | `UserControllerTest` | listar usuarios, usuarios activos por rol |
 | scooter-rental-service | `ScooterControllerTest` | listar, crear 201, detalle, no encontrado 404, eliminar 204 |
 | scooter-rental-service | `RentalControllerTest` | iniciar 201, finalizar 200, no encontrado 404, mis arriendos |
+| payment-service | `PaymentControllerTest` | procesar, completar, cancelar, reembolso |
 
 ---
 
@@ -397,10 +535,16 @@ Todos los servicios emiten logs en formato JSON (logstash-logback-encoder):
 
 Ver logs en tiempo real:
 ```bash
-docker logs -f velourbe-gateway        # logs del API Gateway
-docker logs -f velourbe-user-auth      # logs del servicio de auth
-docker logs -f velourbe-rental         # logs de arriendos
-docker logs -f velourbe-bff            # logs del BFF
+docker logs -f velourbe-gateway
+docker logs -f velourbe-user-auth
+docker logs -f velourbe-rental
+docker logs -f velourbe-bff
+docker logs -f velourbe-payment
+docker logs -f velourbe-notification
+docker logs -f velourbe-analytics
+docker logs -f velourbe-logistics
+docker logs -f velourbe-maintenance
+docker logs -f velourbe-support
 ```
 
 ---
