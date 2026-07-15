@@ -20,6 +20,36 @@ spring:
           predicates:
             - Path=/api/scooters/**, /api/rentals/**
 
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/payments/**
+
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/notifications/**
+
+        - id: analytics-service
+          uri: ${ANALYTICS_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/analytics/**
+
+        - id: logistics-service
+          uri: ${LOGISTICS_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/logistics/**
+
+        - id: maintenance-service
+          uri: ${MAINTENANCE_SERVICE_URL:http://localhost:8088}
+          predicates:
+            - Path=/api/maintenance/**
+
+        - id: support-service
+          uri: ${SUPPORT_SERVICE_URL:http://localhost:8089}
+          predicates:
+            - Path=/api/support/**
+
         - id: bff-service
           uri: ${BFF_SERVICE_URL:http://localhost:8083}
           predicates:

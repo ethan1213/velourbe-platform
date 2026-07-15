@@ -21,7 +21,7 @@ server:
   port: 8082
 
 jwt:
-  secret: ${JWT_SECRET:cambiame-por-un-secret-de-256-bits-minimo-aqui}
+  secret: ${JWT_SECRET:velourbe-secret-de-256-bits-para-jwt-firma-hmac-sha256}
 
 springdoc:
   swagger-ui:

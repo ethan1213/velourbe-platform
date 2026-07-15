@@ -49,4 +49,15 @@ public class BffController {
         log.info("GET /api/bff/rental-summary");
         return ResponseEntity.ok(bffService.getRentalSummary(authorization));
     }
+
+    /**
+     * GET /api/bff/maintenance/issues - Administrative view of maintenance issues.
+     * Proxies maintenance-service through the BFF and keeps upstream errors centralized.
+     */
+    @GetMapping("/maintenance/issues")
+    public ResponseEntity<List<MaintenanceIssueDTO>> maintenanceIssues(
+            @RequestHeader("Authorization") String authorization) {
+        log.info("GET /api/bff/maintenance/issues");
+        return ResponseEntity.ok(bffService.getMaintenanceIssues(authorization));
+    }
 }

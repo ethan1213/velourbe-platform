@@ -14,6 +14,12 @@ public class WebClientConfig {
     @Value("${services.rental.url}")
     private String rentalUrl;
 
+    @Value("${services.support.url}")
+    private String supportUrl;
+
+    @Value("${services.maintenance.url}")
+    private String maintenanceUrl;
+
     @Bean("userAuthClient")
     public WebClient userAuthClient() {
         return WebClient.builder().baseUrl(userAuthUrl).build();
@@ -22,5 +28,15 @@ public class WebClientConfig {
     @Bean("rentalClient")
     public WebClient rentalClient() {
         return WebClient.builder().baseUrl(rentalUrl).build();
+    }
+
+    @Bean("supportClient")
+    public WebClient supportClient() {
+        return WebClient.builder().baseUrl(supportUrl).build();
+    }
+
+    @Bean("maintenanceClient")
+    public WebClient maintenanceClient() {
+        return WebClient.builder().baseUrl(maintenanceUrl).build();
     }
 }

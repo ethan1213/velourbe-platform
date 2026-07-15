@@ -2,18 +2,29 @@
   "info": {
     "_postman_id": "velourbe-collection-v1",
     "name": "VeloUrbe API",
-    "description": "Colección completa de endpoints para la plataforma de microservicios VeloUrbe.\n\nFlujo recomendado:\n1. Ejecutar 'Login Admin' → copiar token → pegar en variable {{token_admin}}\n2. Ejecutar 'Register Client' → copiar token → pegar en variable {{token_client}}\n3. Crear al menos una patineta con 'Create Scooter'\n4. Iniciar arriendo con 'Start Rental' usando token de cliente\n5. Finalizar arriendo con 'End Rental'\n\nVariables de entorno requeridas: auth_url, rental_url, token_admin, token_client",
+    "description": "Colección completa de endpoints para la plataforma de microservicios VeloUrbe.\n\nArquitectura (puertos):\n- Gateway 8080 · Auth 8081 · Rental 8082 · BFF 8083\n- Payment 8084 · Notification 8085 · Analytics 8086\n- Logistics 8087 · Maintenance 8088 · Support 8089\n\nFlujo recomendado:\n1. Login Admin → copiar token → {{token_admin}}\n2. Register / Login Client → copiar token → {{token_client}}\n3. Create Scooter (ADMIN)\n4. Start Rental (CLIENT)\n5. Process Payment / Analytics / Notifications según necesites\n6. End Rental (CLIENT)\n7. BFF Dashboard para ver datos agregados\n\nUsa el environment \"VeloUrbe Local\" o las variables de la colección.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
+    { "key": "gateway_url", "value": "http://localhost:8080", "type": "string" },
     { "key": "auth_url", "value": "http://localhost:8081", "type": "string" },
     { "key": "rental_url", "value": "http://localhost:8082", "type": "string" },
     { "key": "bff_url", "value": "http://localhost:8083", "type": "string" },
-    { "key": "gateway_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "payment_url", "value": "http://localhost:8084", "type": "string" },
+    { "key": "notification_url", "value": "http://localhost:8085", "type": "string" },
+    { "key": "analytics_url", "value": "http://localhost:8086", "type": "string" },
+    { "key": "logistics_url", "value": "http://localhost:8087", "type": "string" },
+    { "key": "maintenance_url", "value": "http://localhost:8088", "type": "string" },
+    { "key": "support_url", "value": "http://localhost:8089", "type": "string" },
     { "key": "token_admin", "value": "", "type": "string" },
     { "key": "token_client", "value": "", "type": "string" },
+    { "key": "user_id", "value": "1", "type": "string" },
     { "key": "scooter_id", "value": "1", "type": "string" },
-    { "key": "rental_id", "value": "1", "type": "string" }
+    { "key": "rental_id", "value": "1", "type": "string" },
+    { "key": "payment_id", "value": "1", "type": "string" },
+    { "key": "notification_id", "value": "1", "type": "string" },
+    { "key": "issue_id", "value": "1", "type": "string" },
+    { "key": "ticket_id", "value": "1", "type": "string" }
   ],
   "item": [
     {
@@ -68,6 +79,15 @@
           "response": []
         },
         {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{auth_url}}/api/users/{{user_id}}", "host": ["{{auth_url}}"], "path": ["api", "users", "{{user_id}}"] }
+          },
+          "response": []
+        },
+        {
           "name": "Get Active Users by Role CLIENT (ADMIN)",
           "request": {
             "method": "GET",
@@ -116,10 +136,10 @@
           "response": []
         },
         {
-          "name": "Get Available Scooters (ADMIN)",
+          "name": "Get Available Scooters",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
             "url": { "raw": "{{rental_url}}/api/scooters/available", "host": ["{{rental_url}}"], "path": ["api", "scooters", "available"] }
           },
           "response": []
@@ -134,7 +154,7 @@
           "response": []
         },
         {
-          "name": "Get Low Battery Scooters (ADMIN) — Custom Query",
+          "name": "Get Low Battery Scooters (ADMIN)",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
@@ -148,7 +168,7 @@
           "response": []
         },
         {
-          "name": "Search Scooters by Location (ADMIN) — Custom Query",
+          "name": "Search Scooters by Location (ADMIN)",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
@@ -210,7 +230,7 @@
           "response": []
         },
         {
-          "name": "Get Long Rentals (ADMIN) — Custom Query",
+          "name": "Get Long Rentals (ADMIN)",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
@@ -220,6 +240,404 @@
               "path": ["api", "rentals", "long"],
               "query": [{ "key": "minMinutes", "value": "30" }]
             }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payment Service (8084)",
+      "item": [
+        {
+          "name": "Process Payment (CLIENT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": { "raw": "{{payment_url}}/api/payments", "host": ["{{payment_url}}"], "path": ["api", "payments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rentalId\": {{rental_id}},\n  \"amount\": 2500,\n  \"paymentMethod\": \"CARD\",\n  \"notes\": \"Pago arriendo\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Payment by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{payment_url}}/api/payments/{{payment_id}}", "host": ["{{payment_url}}"], "path": ["api", "payments", "{{payment_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Payment History (CLIENT)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{payment_url}}/api/payments/history", "host": ["{{payment_url}}"], "path": ["api", "payments", "history"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Complete Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{payment_url}}/api/payments/{{payment_id}}/complete", "host": ["{{payment_url}}"], "path": ["api", "payments", "{{payment_id}}", "complete"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{payment_url}}/api/payments/{{payment_id}}/cancel", "host": ["{{payment_url}}"], "path": ["api", "payments", "{{payment_id}}", "cancel"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Refund Payment",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{payment_url}}/api/payments/{{payment_id}}/refund", "host": ["{{payment_url}}"], "path": ["api", "payments", "{{payment_id}}", "refund"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Notification Service (8085)",
+      "item": [
+        {
+          "name": "Send Notification EMAIL",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": {
+              "raw": "{{notification_url}}/api/notifications?type=EMAIL&message=Tu arriendo ha finalizado",
+              "host": ["{{notification_url}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                { "key": "type", "value": "EMAIL" },
+                { "key": "message", "value": "Tu arriendo ha finalizado" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Send Notification SMS",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": {
+              "raw": "{{notification_url}}/api/notifications?type=SMS&message=Patineta desbloqueada",
+              "host": ["{{notification_url}}"],
+              "path": ["api", "notifications"],
+              "query": [
+                { "key": "type", "value": "SMS" },
+                { "key": "message", "value": "Patineta desbloqueada" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Notification History",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{notification_url}}/api/notifications/history", "host": ["{{notification_url}}"], "path": ["api", "notifications", "history"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{notification_url}}/api/notifications/{{notification_id}}/read", "host": ["{{notification_url}}"], "path": ["api", "notifications", "{{notification_id}}", "read"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Analytics Service (8086)",
+      "item": [
+        {
+          "name": "Record Rental Event",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": {
+              "raw": "{{analytics_url}}/api/analytics/rental?rentalId={{rental_id}}&amount=2500",
+              "host": ["{{analytics_url}}"],
+              "path": ["api", "analytics", "rental"],
+              "query": [
+                { "key": "rentalId", "value": "{{rental_id}}" },
+                { "key": "amount", "value": "2500" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{analytics_url}}/api/analytics/user/{{user_id}}", "host": ["{{analytics_url}}"], "path": ["api", "analytics", "user", "{{user_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get System Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{analytics_url}}/api/analytics/system", "host": ["{{analytics_url}}"], "path": ["api", "analytics", "system"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Logistics Service (8087)",
+      "item": [
+        {
+          "name": "Record Scooter Location",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{logistics_url}}/api/logistics/locations?scooterId={{scooter_id}}&latitude=-33.4372&longitude=-70.6506",
+              "host": ["{{logistics_url}}"],
+              "path": ["api", "logistics", "locations"],
+              "query": [
+                { "key": "scooterId", "value": "{{scooter_id}}" },
+                { "key": "latitude", "value": "-33.4372" },
+                { "key": "longitude", "value": "-70.6506" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Scooter Location",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{logistics_url}}/api/logistics/locations/{{scooter_id}}", "host": ["{{logistics_url}}"], "path": ["api", "logistics", "locations", "{{scooter_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Nearby Scooters",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": {
+              "raw": "{{logistics_url}}/api/logistics/nearby?latitude=-33.4372&longitude=-70.6506&radiusKm=1.0",
+              "host": ["{{logistics_url}}"],
+              "path": ["api", "logistics", "nearby"],
+              "query": [
+                { "key": "latitude", "value": "-33.4372" },
+                { "key": "longitude", "value": "-70.6506" },
+                { "key": "radiusKm", "value": "1.0" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Maintenance Service (8088)",
+      "item": [
+        {
+          "name": "Report Issue (CLIENT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": { "raw": "{{maintenance_url}}/api/maintenance/issues", "host": ["{{maintenance_url}}"], "path": ["api", "maintenance", "issues"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scooterId\": {{scooter_id}},\n  \"issueType\": \"BRAKE\",\n  \"description\": \"Freno delantero flojo\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Issue by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{maintenance_url}}/api/maintenance/issues/{{issue_id}}", "host": ["{{maintenance_url}}"], "path": ["api", "maintenance", "issues", "{{issue_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Issues (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": {
+              "raw": "{{maintenance_url}}/api/maintenance/issues?status=REPORTED",
+              "host": ["{{maintenance_url}}"],
+              "path": ["api", "maintenance", "issues"],
+              "query": [{ "key": "status", "value": "REPORTED", "description": "Opcional: REPORTED | IN_REVIEW | IN_PROGRESS | RESOLVED | CLOSED" }]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Issues by Scooter",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{maintenance_url}}/api/maintenance/issues/scooter/{{scooter_id}}", "host": ["{{maintenance_url}}"], "path": ["api", "maintenance", "issues", "scooter", "{{scooter_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Mark In Review (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{maintenance_url}}/api/maintenance/issues/{{issue_id}}/review", "host": ["{{maintenance_url}}"], "path": ["api", "maintenance", "issues", "{{issue_id}}", "review"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Start Work (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{maintenance_url}}/api/maintenance/issues/{{issue_id}}/start", "host": ["{{maintenance_url}}"], "path": ["api", "maintenance", "issues", "{{issue_id}}", "start"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Issue (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "url": { "raw": "{{maintenance_url}}/api/maintenance/issues/{{issue_id}}/resolve", "host": ["{{maintenance_url}}"], "path": ["api", "maintenance", "issues", "{{issue_id}}", "resolve"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scooterId\": {{scooter_id}},\n  \"issueType\": \"BRAKE\",\n  \"description\": \"Freno delantero flojo\",\n  \"resolutionNotes\": \"Freno ajustado y probado\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Close Issue (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{maintenance_url}}/api/maintenance/issues/{{issue_id}}/close", "host": ["{{maintenance_url}}"], "path": ["api", "maintenance", "issues", "{{issue_id}}", "close"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Support Service (8089)",
+      "item": [
+        {
+          "name": "Create Ticket (CLIENT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": { "raw": "{{support_url}}/api/support/tickets", "host": ["{{support_url}}"], "path": ["api", "support", "tickets"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rentalId\": {{rental_id}},\n  \"subject\": \"Cobro incorrecto\",\n  \"description\": \"Se cobró de más al finalizar\",\n  \"priority\": \"MEDIUM\",\n  \"category\": \"PAYMENT\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "My Tickets (CLIENT)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{support_url}}/api/support/tickets/my", "host": ["{{support_url}}"], "path": ["api", "support", "tickets", "my"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{support_url}}/api/support/tickets/{{ticket_id}}", "host": ["{{support_url}}"], "path": ["api", "support", "tickets", "{{ticket_id}}"] }
+          },
+          "response": []
+        },
+        {
+          "name": "List All Tickets (ADMIN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{support_url}}/api/support/tickets", "host": ["{{support_url}}"], "path": ["api", "support", "tickets"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Assign Ticket (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "url": { "raw": "{{support_url}}/api/support/tickets/{{ticket_id}}/assign", "host": ["{{support_url}}"], "path": ["api", "support", "tickets", "{{ticket_id}}", "assign"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assignedTo\": \"soporte@velourbe.cl\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve Ticket (ADMIN)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_admin}}" }
+            ],
+            "url": { "raw": "{{support_url}}/api/support/tickets/{{ticket_id}}/resolve", "host": ["{{support_url}}"], "path": ["api", "support", "tickets", "{{ticket_id}}", "resolve"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resolutionNotes\": \"Se reembolsó la diferencia al cliente\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Close Ticket",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": { "raw": "{{support_url}}/api/support/tickets/{{ticket_id}}/close", "host": ["{{support_url}}"], "path": ["api", "support", "tickets", "{{ticket_id}}", "close"] }
           },
           "response": []
         }
@@ -255,12 +673,21 @@
             "url": { "raw": "{{bff_url}}/api/bff/rental-summary", "host": ["{{bff_url}}"], "path": ["api", "bff", "rental-summary"] }
           },
           "response": []
+        },
+        {
+          "name": "Maintenance Issues (BFF)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{bff_url}}/api/bff/maintenance/issues", "host": ["{{bff_url}}"], "path": ["api", "bff", "maintenance", "issues"] }
+          },
+          "response": []
         }
       ]
     },
     {
       "name": "Vía API Gateway (8080)",
-      "description": "Punto de entrada único de la plataforma. Todas las peticiones se enrutan a través del gateway.",
+      "description": "Punto de entrada único. Todas las rutas se enrutan según el prefijo /api/*.",
       "item": [
         {
           "name": "Login Admin (Gateway)",
@@ -276,11 +703,90 @@
           "response": []
         },
         {
+          "name": "Login Client (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{gateway_url}}/api/auth/login", "host": ["{{gateway_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"cliente@velourbe.cl\",\n  \"password\": \"cliente123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
           "name": "Available Scooters (Gateway)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
             "url": { "raw": "{{gateway_url}}/api/scooters/available", "host": ["{{gateway_url}}"], "path": ["api", "scooters", "available"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Start Rental (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": { "raw": "{{gateway_url}}/api/rentals/start", "host": ["{{gateway_url}}"], "path": ["api", "rentals", "start"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"scooterId\": {{scooter_id}}\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Process Payment (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": { "raw": "{{gateway_url}}/api/payments", "host": ["{{gateway_url}}"], "path": ["api", "payments"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rentalId\": {{rental_id}},\n  \"amount\": 2500,\n  \"paymentMethod\": \"CARD\",\n  \"notes\": \"Pago vía gateway\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Nearby Scooters (Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
+            "url": {
+              "raw": "{{gateway_url}}/api/logistics/nearby?latitude=-33.4372&longitude=-70.6506&radiusKm=1.0",
+              "host": ["{{gateway_url}}"],
+              "path": ["api", "logistics", "nearby"],
+              "query": [
+                { "key": "latitude", "value": "-33.4372" },
+                { "key": "longitude", "value": "-70.6506" },
+                { "key": "radiusKm", "value": "1.0" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Support Ticket (Gateway)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": { "raw": "{{gateway_url}}/api/support/tickets", "host": ["{{gateway_url}}"], "path": ["api", "support", "tickets"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rentalId\": {{rental_id}},\n  \"subject\": \"Cobro incorrecto\",\n  \"description\": \"Se cobró de más al finalizar\",\n  \"priority\": \"MEDIUM\",\n  \"category\": \"PAYMENT\"\n}"
+            }
           },
           "response": []
         },
@@ -290,6 +796,15 @@
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token_client}}" }],
             "url": { "raw": "{{gateway_url}}/api/bff/dashboard", "host": ["{{gateway_url}}"], "path": ["api", "bff", "dashboard"] }
+          },
+          "response": []
+        },
+        {
+          "name": "System Analytics (Gateway)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token_admin}}" }],
+            "url": { "raw": "{{gateway_url}}/api/analytics/system", "host": ["{{gateway_url}}"], "path": ["api", "analytics", "system"] }
           },
           "response": []
         }

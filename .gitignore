@@ -2,11 +2,11 @@
 build/
 .gradle/
 **/build/
-!gradle/wrapper/gradle-wrapper.jar
 
 # Compiled classes & archives
 *.class
 *.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 *.war
 
 # IDE
