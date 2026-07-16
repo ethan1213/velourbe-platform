@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Presentación VeloUrbe</title>
+<style>
+  @page { size: 297mm 167mm; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #eaf4ee; }
+  .slide {
+    width: 297mm; height: 167mm; page-break-after: always; overflow: hidden;
+    background: linear-gradient(135deg, #0c1712 0%, #10231a 55%, #0c1712 100%);
+    padding: 14mm 18mm 12mm; display: flex; flex-direction: column; position: relative;
+  }
+  .slide::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2.2mm;
+    background: linear-gradient(90deg, #2ecc71, #1e7a45);
+  }
+  .tag { display: inline-block; font-size: 8.5pt; font-weight: 700; letter-spacing: 2px;
+    color: #2ecc71; text-transform: uppercase; margin-bottom: 2mm; }
+  h1.title { font-size: 23pt; font-weight: 700; color: #ffffff; margin-bottom: 6mm; }
+  .content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .footer { display: flex; justify-content: space-between; font-size: 8pt; color: #7fa38f;
+    border-top: 0.4mm solid #244635; padding-top: 2.5mm; margin-top: 4mm; }
+  .grid { display: grid; gap: 5mm; }
+  .card {
+    background: rgba(46, 204, 113, 0.07); border: 0.4mm solid #244635; border-radius: 3mm;
+    padding: 5mm 6mm;
+  }
+  .card h3 { font-size: 11.5pt; color: #2ecc71; margin-bottom: 1.8mm; }
+  .card p { font-size: 9.5pt; line-height: 1.4; color: #cfe3d7; }
+  .kicker { font-size: 9pt; color: #7fa38f; font-weight: 600; }
+  table.tbl { width: 100%; border-collapse: collapse; font-size: 9pt; }
+  table.tbl th { background: #1a3527; color: #2ecc71; text-align: left; padding: 2.2mm 3mm;
+    border: 0.3mm solid #244635; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.5px; }
+  table.tbl td { padding: 1.9mm 3mm; border: 0.3mm solid #244635; color: #d9eadf; }
+  table.tbl td b { color: #ffffff; }
+  .arrow { text-align: center; color: #2ecc71; font-size: 10pt; padding: 0.8mm 0; }
+  .dbox { border: 0.4mm solid #2ecc71; border-radius: 2.5mm; padding: 2.6mm 4mm; text-align: center;
+    background: rgba(46, 204, 113, 0.10); }
+  .dbox b { color: #fff; font-size: 10.5pt; }
+  .dbox span { display: block; font-size: 8.3pt; color: #b9d6c5; margin-top: 0.8mm; }
+  .dbox.sub { background: rgba(46, 204, 113, 0.05); border-color: #244635; }
+  .msgrid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2mm; }
+  .msgrid .dbox { padding: 2mm 1mm; }
+  .msgrid .dbox b { font-size: 8pt; }
+  .msgrid .dbox span { font-size: 7.3pt; }
+  .badge { display: inline-block; background: #1a3527; color: #2ecc71; font-weight: 700;
+    border-radius: 1.5mm; padding: 0.8mm 2.5mm; font-size: 8.5pt; margin-right: 2mm; }
+  ul.clean { list-style: none; }
+  ul.clean li { font-size: 10pt; color: #cfe3d7; padding-left: 6mm; position: relative;
+    margin-bottom: 2.6mm; line-height: 1.45; }
+  ul.clean li::before { content: "■"; color: #2ecc71; position: absolute; left: 0; font-size: 8pt; top: 1pt; }
+  .check { color: #2ecc71; font-weight: 700; margin-right: 2mm; }
+  code { font-family: Consolas, monospace; background: #1a3527; color: #9be8bf;
+    padding: 0.3mm 1.6mm; border-radius: 1mm; font-size: 0.92em; }
+</style>
+</head>
+<body>
+
+<!-- ============ 1 · PORTADA ============ -->
+<div class="slide" style="align-items:center; justify-content:center; text-align:center;">
+  <div style="width:26mm;height:26mm;border-radius:50%;background:linear-gradient(135deg,#2ecc71,#1e7a45);
+       display:flex;align-items:center;justify-content:center;font-size:17pt;font-weight:800;color:#0c1712;margin-bottom:7mm;">VU</div>
+  <div style="font-size:34pt;font-weight:800;color:#fff;letter-spacing:1px;">VeloUrbe</div>
+  <div style="font-size:13pt;color:#cfe3d7;margin-top:2.5mm;">Plataforma de Arriendo de Patinetas Eléctricas</div>
+  <div style="font-size:10.5pt;color:#7fa38f;margin-top:6mm;">Informe Técnico — Arquitectura de Microservicios y Código Limpio</div>
+  <div style="margin-top:7mm;font-size:9.5pt;color:#2ecc71;font-weight:600;">
+    Spring Boot 3.5 · Java 21 · Docker · PostgreSQL · JWT · Gateway → BFF → 10 Microservicios
+  </div>
+  <div style="position:absolute;bottom:12mm;font-size:8.5pt;color:#7fa38f;">Asignatura: Desarrollo Backend / Microservicios · 2026</div>
+</div>
+
+<!-- ============ 2 · INTRODUCCIÓN ============ -->
+<div class="slide">
+  <div class="tag">1 · Introducción</div>
+  <h1 class="title">Contexto y Solución</h1>
+  <div class="content">
+    <p style="font-size:11pt;color:#cfe3d7;line-height:1.5;margin-bottom:7mm;">
+      VeloUrbe resuelve la movilidad urbana de última milla con un ecosistema digital que permite arrendar
+      patinetas eléctricas de forma ágil y segura. Adopta una arquitectura de <b style="color:#fff">10 microservicios</b>
+      tras un <b style="color:#fff">API Gateway</b> y un <b style="color:#fff">BFF</b> para desacoplar identidades, flota,
+      pagos y la experiencia del cliente.
+    </p>
+    <div class="grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="card"><h3>Problema</h3><p>Movilidad de última milla: acceso rápido y seguro a patinetas en la ciudad.</p></div>
+      <div class="card"><h3>Solución</h3><p>10 microservicios de dominio tras un Gateway y un BFF, orquestados con Docker Compose.</p></div>
+      <div class="card"><h3>Enfoque</h3><p>Clean Code, patrón CSR, JWT stateless, Flyway y pruebas automatizadas.</p></div>
+      <div class="card"><h3>Resultado</h3><p>Sistema cohesivo, escalable y tolerante a fallos, listo para crecer.</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>2</span></div>
+</div>
+
+<!-- ============ 3 · RF ============ -->
+<div class="slide">
+  <div class="tag">2 · Desarrollo</div>
+  <h1 class="title">Requerimientos Funcionales</h1>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card"><h3><span class="badge">RF01</span>Gestión de Usuarios</h3><p>Registro y login emitiendo JWT firmados (HS256) con roles y permisos.</p></div>
+      <div class="card"><h3><span class="badge">RF02</span>Inventario de Patinetas</h3><p>CRUD completo: batería, ubicación geográfica y disponibilidad.</p></div>
+      <div class="card"><h3><span class="badge">RF03</span>Gestión de Arriendos</h3><p>Viajes transaccionales con marcas de tiempo y duración total.</p></div>
+      <div class="card"><h3><span class="badge">RF04</span>Pagos</h3><p>Ciclo completo del pago: procesar, completar, cancelar y reembolsar.</p></div>
+      <div class="card"><h3><span class="badge">RF05</span>Notificaciones y Analítica</h3><p>EMAIL/SMS con historial, eventos de arriendo y estadísticas de sistema.</p></div>
+      <div class="card"><h3><span class="badge">RF06</span>Logística, Mantención y Soporte</h3><p>GPS con búsqueda por radio, issues de mantención y tickets de soporte.</p></div>
+      <div class="card"><h3><span class="badge">RF07</span>Estaciones</h3><p>Capacidad, dock/undock y búsqueda por cercanía (Haversine).</p></div>
+      <div class="card"><h3><span class="badge">RF08</span>Reseñas</h3><p>Calificación 1–5 por arriendo (única) y promedio por patineta.</p></div>
+      <div class="card"><h3><span class="badge">RF09</span>BFF Proxy + Dashboard</h3><p>Proxy de /api/** a los 10 microservicios y vistas agregadas en una petición.</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>3</span></div>
+</div>
+
+<!-- ============ 4 · RNF ============ -->
+<div class="slide">
+  <div class="tag">2 · Desarrollo</div>
+  <h1 class="title">Requerimientos No Funcionales</h1>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);">
+      <div class="card"><h3>🔒 Seguridad</h3><p>Autenticación stateless validada por JwtAuthFilter en cada microservicio. Contraseñas con BCrypt.</p></div>
+      <div class="card"><h3>🐳 Infraestructura</h3><p>13 contenedores Docker (Gateway, BFF, 10 servicios y PostgreSQL). BD independiente por dominio.</p></div>
+      <div class="card"><h3>📊 Trazabilidad</h3><p>Logging estructurado en JSON (logstash-logback-encoder) para indexación y monitoreo central.</p></div>
+      <div class="card"><h3>✨ Calidad de Código</h3><p>Patrón CSR en los 10 servicios, DTOs inmutables (Records) y respuestas HATEOAS.</p></div>
+      <div class="card"><h3>📈 Escalabilidad</h3><p>Bounded Contexts desacoplados que permiten escalar horizontalmente cada servicio.</p></div>
+      <div class="card"><h3>⚡ Resiliencia</h3><p>BFF con llamadas no bloqueantes vía WebClient; servicios independientes y tolerantes a fallos.</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>4</span></div>
+</div>
+
+<!-- ============ 5 · CASOS DE USO ============ -->
+<div class="slide">
+  <div class="tag">2 · Desarrollo</div>
+  <h1 class="title">Casos de Uso Principales</h1>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:1fr;">
+      <div class="card"><h3><span class="badge">1</span>Registro y Autenticación</h3>
+        <p>El cliente envía credenciales al Gateway → pasan por el BFF al servicio de auth → se hashean y persisten → retorna un JWT que habilita el acceso a los módulos protegidos.</p></div>
+      <div class="card"><h3><span class="badge">2</span>Ciclo de Vida del Arriendo</h3>
+        <p>Usuario autenticado inicia un viaje → se verifica disponibilidad transaccional → el scooter pasa a "en uso" → al finalizar se libera el recurso, se contabiliza el tiempo, se procesa el pago y se puede dejar una reseña.</p></div>
+      <div class="card"><h3><span class="badge">3</span>Orquestación del Dashboard</h3>
+        <p>El cliente consulta al BFF → ejecuta llamadas concurrentes no bloqueantes vía WebClient a los servicios core → ensambla un payload unificado y optimizado.</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>5</span></div>
+</div>
+
+<!-- ============ 6 · ARQUITECTURA (TABLA) ============ -->
+<div class="slide">
+  <div class="tag">2.2 · Arquitectura</div>
+  <h1 class="title" style="margin-bottom:4mm;">Los 12 Servicios de la Plataforma</h1>
+  <div class="content">
+    <table class="tbl">
+      <tr><th style="width:34mm">Servicio</th><th style="width:14mm">Puerto</th><th>Responsabilidad</th><th style="width:42mm">Base de datos</th></tr>
+      <tr><td><b>api-gateway</b></td><td>8080</td><td>Entrada única, sin código: enruta /api/** al BFF. Aloja el Swagger centralizado.</td><td>—</td></tr>
+      <tr><td><b>bff-service</b></td><td>8083</td><td>Proxy a los 10 microservicios + vistas agregadas (/api/bff/**).</td><td>Sin persistencia</td></tr>
+      <tr><td><b>user-auth-service</b></td><td>8081</td><td>Registro, login, JWT y gestión de usuarios.</td><td>db_scooter_users</td></tr>
+      <tr><td><b>scooter-rental-service</b></td><td>8082</td><td>Inventario de patinetas y lógica ACID de arriendos.</td><td>db_scooter_rentals</td></tr>
+      <tr><td><b>payment-service</b></td><td>8084</td><td>Pagos: procesar, completar, cancelar, reembolsar.</td><td>db_scooter_payments</td></tr>
+      <tr><td><b>notification-service</b></td><td>8085</td><td>Notificaciones EMAIL/SMS e historial por usuario.</td><td>db_scooter_notifications</td></tr>
+      <tr><td><b>analytics-service</b></td><td>8086</td><td>Eventos de arriendo y estadísticas de usuario/sistema.</td><td>db_scooter_analytics</td></tr>
+      <tr><td><b>logistics-service</b></td><td>8087</td><td>Ubicación GPS y búsqueda de patinetas por área.</td><td>db_scooter_logistics</td></tr>
+      <tr><td><b>maintenance-service</b></td><td>8088</td><td>Issues de mantención: reporte y ciclo de vida.</td><td>db_scooter_maintenance</td></tr>
+      <tr><td><b>support-service</b></td><td>8089</td><td>Tickets de soporte: asignación y resolución.</td><td>db_scooter_support</td></tr>
+      <tr><td><b>station-service</b></td><td>8090</td><td>Estaciones de carga: capacidad, dock/undock, cercanía.</td><td>db_scooter_stations</td></tr>
+      <tr><td><b>review-service</b></td><td>8091</td><td>Reseñas 1–5 y rating promedio por patineta.</td><td>db_scooter_reviews</td></tr>
+    </table>
+    <p style="font-size:8.8pt;color:#7fa38f;margin-top:3mm;">El BFF no cuenta como microservicio de dominio: la plataforma tiene <b style="color:#2ecc71">10 microservicios funcionales</b> más el Gateway y el BFF.</p>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>6</span></div>
+</div>
+
+<!-- ============ 7 · DIAGRAMA C2 ============ -->
+<div class="slide">
+  <div class="tag">2.3 · C4 Model</div>
+  <h1 class="title" style="margin-bottom:4mm;">Diagrama C2 — Contenedores</h1>
+  <div class="content">
+    <div class="dbox sub" style="width:60%;margin:0 auto;"><b>Cliente</b><span>App Móvil / Postman</span></div>
+    <div class="arrow">↓ &nbsp;Puerto 8080&nbsp; ↓</div>
+    <div class="dbox"><b>API Gateway · Spring Cloud Gateway · :8080</b>
+      <span>Entrada única · Solo configuración · CORS · Swagger centralizado · /api/** → BFF</span></div>
+    <div class="arrow">↓ &nbsp;Puerto 8083&nbsp; ↓</div>
+    <div class="dbox"><b>bff-service · Backend for Frontend · :8083</b>
+      <span>Proxy de /api/** hacia el microservicio dueño de la ruta + agregación /api/bff/** (WebClient)</span></div>
+    <div class="arrow">↓ &nbsp;apunta a los 10 microservicios&nbsp; ↓</div>
+    <div class="msgrid">
+      <div class="dbox sub"><b>user-auth</b><span>:8081</span></div>
+      <div class="dbox sub"><b>rental</b><span>:8082</span></div>
+      <div class="dbox sub"><b>payment</b><span>:8084</span></div>
+      <div class="dbox sub"><b>notification</b><span>:8085</span></div>
+      <div class="dbox sub"><b>analytics</b><span>:8086</span></div>
+      <div class="dbox sub"><b>logistics</b><span>:8087</span></div>
+      <div class="dbox sub"><b>maint.</b><span>:8088</span></div>
+      <div class="dbox sub"><b>support</b><span>:8089</span></div>
+      <div class="dbox sub"><b>station</b><span>:8090</span></div>
+      <div class="dbox sub"><b>review</b><span>:8091</span></div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="dbox sub"><b>PostgreSQL</b><span>Una base de datos por servicio — Database per Service</span></div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>7</span></div>
+</div>
+
+<!-- ============ 8 · DIAGRAMA C3 / CSR ============ -->
+<div class="slide">
+  <div class="tag">2.3 · C4 Model</div>
+  <h1 class="title" style="margin-bottom:3mm;">Diagrama C3 — Patrón CSR (Controller → Service → Repository)</h1>
+  <div class="content" style="flex-direction:row;gap:8mm;align-items:center;">
+    <div style="flex:1.25;">
+      <div class="dbox"><b>Security · JwtAuthFilter</b><span>Valida firma del token y extrae claims (sub, role, userId). Sin token válido → 403.</span></div>
+      <div class="arrow">↓</div>
+      <div class="dbox sub"><b>Controller Layer</b><span>Mapeo REST + HATEOAS · sin lógica de negocio ni repositorios</span></div>
+      <div class="arrow">↓ &nbsp;DTOs inmutables (Java Records)&nbsp; ↓</div>
+      <div class="dbox sub"><b>Service Layer</b><span>Reglas de negocio · @Transactional · único acceso al repositorio</span></div>
+      <div class="arrow">↓ &nbsp;Entities&nbsp; ↓</div>
+      <div class="dbox sub"><b>Repository · Spring Data JPA</b><span>Acceso a datos · ORM Hibernate · solo queries</span></div>
+      <div class="arrow">↓</div>
+      <div class="dbox"><b>Flyway → PostgreSQL</b><span>Migraciones DDL versionadas (V1, V2…) · BD propia por servicio</span></div>
+    </div>
+    <div style="flex:1;">
+      <div class="card" style="margin-bottom:5mm;">
+        <h3>Comunicación interna</h3>
+        <ul class="clean" style="margin-top:2mm;">
+          <li>Las capas intercambian DTOs inmutables (Java Records).</li>
+          <li>Las Entities solo viven entre Service y Repository.</li>
+          <li>Ningún controller inyecta repositorios — CSR verificado en los 10 servicios.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Comunicación externa</h3>
+        <ul class="clean" style="margin-top:2mm;">
+          <li>Capa Client (WebClient) presente en el BFF.</li>
+          <li>El BFF proxea /api/** y agrega datos de los 10 microservicios sobre HTTP.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>8</span></div>
+</div>
+
+<!-- ============ 9 · CLEAN CODE ============ -->
+<div class="slide">
+  <div class="tag">2.4 · Estándares</div>
+  <h1 class="title">Clean Code y Buenas Prácticas</h1>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="card"><h3>Idioma inglés</h3><p>Clases, variables, métodos y tablas íntegramente en inglés.</p></div>
+      <div class="card"><h3>Javadoc</h3><p>Comentarios de bloque limpios, sin // redundantes.</p></div>
+      <div class="card"><h3>Java Records</h3><p>DTOs inmutables para transferencia sin mutabilidad.</p></div>
+      <div class="card"><h3>API de Streams</h3><p>Transformación declarativa; sin bucles imperativos.</p></div>
+      <div class="card"><h3>Patrón CSR</h3><p>Controller → Service → Repository en los 10 microservicios.</p></div>
+      <div class="card"><h3>Errores globales</h3><p>@RestControllerAdvice + @ExceptionHandler → JSON 404/400/401.</p></div>
+      <div class="card"><h3>Controllers limpios</h3><p>Toda la lógica vive en la capa Service (SRP).</p></div>
+      <div class="card"><h3>HATEOAS</h3><p>Respuestas REST enriquecidas con enlaces de hipermedia.</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>9</span></div>
+</div>
+
+<!-- ============ 10 · BASE DE DATOS ============ -->
+<div class="slide">
+  <div class="tag">3 · Base de Datos</div>
+  <h1 class="title">Persistencia y Migraciones (Flyway)</h1>
+  <div class="content">
+    <p style="font-size:10.5pt;color:#cfe3d7;margin-bottom:5mm;">
+      Cada uno de los <b style="color:#fff">10 microservicios</b> tiene su propia BD PostgreSQL
+      (incluidas <code>db_scooter_stations</code> y <code>db_scooter_reviews</code>).
+      Flyway versiona el esquema con DDL separado del DML.
+    </p>
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:5mm;">
+      <div class="card"><h3>user-auth · db_scooter_users</h3>
+        <p>V1 → tabla users (DDL)<br>V2 → seed admin (DML)<br>V3 → fix password</p></div>
+      <div class="card"><h3>rental · db_scooter_rentals</h3>
+        <p>V1 → tabla scooters (DDL)<br>V2 → tabla rentals (DDL)</p></div>
+      <div class="card"><h3>station / review (nuevos)</h3>
+        <p>V1 → tabla stations (DDL)<br>V1 → tabla reviews con UNIQUE (user, rental)</p></div>
+    </div>
+    <div class="card">
+      <h3>Separación estricta DDL / DML</h3>
+      <p>Prohibido mezclar estructura (CREATE TABLE) con datos de prueba (INSERT) en un mismo archivo.
+      Los datos de prueba se generan con DataFaker solo bajo el perfil <code>dev</code>, garantizando despliegues limpios en producción.</p>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>10</span></div>
+</div>
+
+<!-- ============ 11 · TESTING ============ -->
+<div class="slide">
+  <div class="tag">4 · Pruebas</div>
+  <h1 class="title">Estrategia de Testing</h1>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:5mm;">
+      <div class="card"><h3>Servicio</h3><p><code>@ExtendWith(MockitoExtension)</code><br>Lógica de negocio aislada con dependencias simuladas, sin contexto Spring.</p></div>
+      <div class="card"><h3>Controller</h3><p><code>MockMvc</code> standalone + Mockito<br>Mapeo HTTP, códigos de estado (201/200/404/401) y serialización JSON.</p></div>
+      <div class="card"><h3>Contexto</h3><p><code>@SpringBootTest</code> + perfil test<br>El contexto levanta con H2 en memoria — la suite corre sin PostgreSQL.</p></div>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr);">
+      <div class="card"><h3>user-auth-service</h3>
+        <p>AuthServiceTest · UserServiceTest · AuthControllerTest · UserControllerTest<br>
+        <span class="kicker">Registro, login, email duplicado, 401 inválido…</span></p></div>
+      <div class="card"><h3>rental / payment / station / review</h3>
+        <p>ScooterServiceTest · RentalServiceTest · StationServiceTest · ReviewServiceTest · PaymentControllerTest…<br>
+        <span class="kicker">Arriendos, dock/undock, estación llena, rating promedio, reseña duplicada…</span></p></div>
+    </div>
+    <p style="font-size:9.5pt;color:#7fa38f;margin-top:4mm;">Cobertura total: <b style="color:#2ecc71">11 clases de test</b> entre servicios y controladores.</p>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>11</span></div>
+</div>
+
+<!-- ============ 12 · SWAGGER ============ -->
+<div class="slide">
+  <div class="tag">5 · Documentación API</div>
+  <h1 class="title">Swagger Centralizado + Postman</h1>
+  <div class="content">
+    <div class="card" style="margin-bottom:5mm;border-color:#2ecc71;">
+      <h3>Swagger centralizado en el Gateway</h3>
+      <p><code>http://localhost:8080/swagger-ui.html</code> — un solo Swagger UI agrupa la documentación de los
+      <b style="color:#fff">10 microservicios + BFF</b> mediante un selector de definiciones. El Gateway expone cada
+      <code>/v3/api-docs</code> bajo rutas <code>/docs/{servicio}</code> usando solo configuración (SetPath) — sin código.</p>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:5mm;">
+      <div class="card"><h3>Swagger por servicio</h3><p>Cada microservicio mantiene su propio UI:<br><code>localhost:8081…8091/swagger-ui.html</code></p></div>
+      <div class="card"><h3>Colección Postman (/postman)</h3><p>Endpoints por servicio + carpetas <b style="color:#fff">Stations</b>, <b style="color:#fff">Reviews</b>, BFF y Vía API Gateway, con entorno de variables preconfigurado.</p></div>
+    </div>
+    <p style="font-size:9.5pt;color:#7fa38f;">Flujo sugerido: Login Admin → Crear patineta → Registrar cliente → Iniciar arriendo → BFF Dashboard → Finalizar → Reseña.</p>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>12</span></div>
+</div>
+
+<!-- ============ 13 · GIT ============ -->
+<div class="slide">
+  <div class="tag">6 · Repositorio</div>
+  <h1 class="title">Estrategia de Branching (Git)</h1>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:5mm;">
+      <div class="card"><h3>main</h3><p>Rama estable y siempre desplegable. Contiene la versión integrada de los 12 servicios.</p></div>
+      <div class="card"><h3>feature/*</h3><p>Una rama por funcionalidad (auth, rentals, stations, reviews…). Se integra a main mediante Pull Requests.</p></div>
+      <div class="card"><h3>docs / test</h3><p>Ramas de soporte para documentación, colección Postman y pruebas.</p></div>
+    </div>
+    <div class="card">
+      <h3>Commits semánticos</h3>
+      <p><code>feat:</code> · <code>test:</code> · <code>docs:</code> · <code>merge:</code> — historial limpio, legible y trazable.
+      Los conflictos se resuelven con merges explícitos y documentados.</p>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>13</span></div>
+</div>
+
+<!-- ============ 14 · DEMO ============ -->
+<div class="slide">
+  <div class="tag">7 · Demo en Vivo</div>
+  <h1 class="title">Flujo de Demostración (Docker)</h1>
+  <div class="content">
+    <p style="font-size:10.5pt;color:#cfe3d7;margin-bottom:5mm;">
+      Los <b style="color:#fff">13 contenedores</b> corren localmente con Docker:
+      <b style="color:#2ecc71">Gateway → BFF → 10 microservicios + PostgreSQL</b>.
+    </p>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr);">
+      <div class="card"><h3><span class="badge">1</span>Registro de Usuario <span class="kicker">— 200 OK</span></h3><p><code>POST /api/auth/register</code> → crea cuenta con rol CLIENT.</p></div>
+      <div class="card"><h3><span class="badge">2</span>Login <span class="kicker">— 200 OK</span></h3><p><code>POST /api/auth/login</code> → devuelve el token JWT de seguridad.</p></div>
+      <div class="card"><h3><span class="badge">3</span>Sin Credenciales <span class="kicker">— 403 Forbidden</span></h3><p>GET a endpoint protegido sin token → el sistema rechaza la petición.</p></div>
+      <div class="card"><h3><span class="badge">4</span>Operación del Negocio <span class="kicker">— 201 Created</span></h3><p><code>POST /api/rentals/start</code> con token válido → arriendo creado con éxito.</p></div>
+    </div>
+    <p style="font-size:9.5pt;color:#7fa38f;margin-top:4mm;">El paso 3 (403 sin token) demuestra que la seguridad JWT protege el endpoint core antes de la operación válida del paso 4.</p>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>14</span></div>
+</div>
+
+<!-- ============ 15 · STACK ============ -->
+<div class="slide">
+  <div class="tag">Tecnologías</div>
+  <h1 class="title">Stack Tecnológico</h1>
+  <div class="content">
+    <div class="grid" style="grid-template-columns:repeat(6,1fr);">
+      <div class="card" style="text-align:center;"><h3>Java</h3><p>21</p></div>
+      <div class="card" style="text-align:center;"><h3>Spring Boot</h3><p>3.5.0</p></div>
+      <div class="card" style="text-align:center;"><h3>Cloud Gateway</h3><p>2025.0.0</p></div>
+      <div class="card" style="text-align:center;"><h3>Spring Security</h3><p>JWT</p></div>
+      <div class="card" style="text-align:center;"><h3>Data JPA</h3><p>Hibernate</p></div>
+      <div class="card" style="text-align:center;"><h3>HATEOAS</h3><p>links</p></div>
+      <div class="card" style="text-align:center;"><h3>WebFlux</h3><p>WebClient</p></div>
+      <div class="card" style="text-align:center;"><h3>Flyway</h3><p>migraciones</p></div>
+      <div class="card" style="text-align:center;"><h3>DataFaker</h3><p>2.4.2</p></div>
+      <div class="card" style="text-align:center;"><h3>PostgreSQL</h3><p>16</p></div>
+      <div class="card" style="text-align:center;"><h3>H2</h3><p>tests</p></div>
+      <div class="card" style="text-align:center;"><h3>JJWT</h3><p>0.12.6</p></div>
+      <div class="card" style="text-align:center;"><h3>Lombok</h3><p>1.18.34</p></div>
+      <div class="card" style="text-align:center;"><h3>SpringDoc</h3><p>2.7.0</p></div>
+      <div class="card" style="text-align:center;"><h3>logback JSON</h3><p>8.0</p></div>
+      <div class="card" style="text-align:center;"><h3>JUnit / Mockito</h3><p>tests</p></div>
+      <div class="card" style="text-align:center;"><h3>Gradle</h3><p>9.4.1</p></div>
+      <div class="card" style="text-align:center;"><h3>Docker</h3><p>Compose</p></div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · Informe Técnico de Arquitectura</span><span>15</span></div>
+</div>
+
+<!-- ============ 16 · CONCLUSIÓN ============ -->
+<div class="slide">
+  <div class="tag">Conclusión</div>
+  <h1 class="title">VeloUrbe — Arquitectura sólida y mantenible</h1>
+  <div class="content">
+    <p style="font-size:11pt;color:#cfe3d7;line-height:1.55;margin-bottom:4mm;">
+      La segregación en <b style="color:#fff">10 microservicios</b>, coordinada por un <b style="color:#fff">API Gateway sin código</b>
+      que enruta al <b style="color:#fff">BFF</b> (patrón Gateway → BFF → servicios), produce un sistema cohesivo,
+      desacoplado y tolerante a fallos.
+    </p>
+    <p style="font-size:11pt;color:#cfe3d7;line-height:1.55;margin-bottom:6mm;">
+      Java 21 + Records inmutables, patrón CSR verificado, Flyway, JWT stateless, Swagger centralizado y una suite
+      de pruebas automatizadas certifican el cumplimiento de los requerimientos técnicos y de calidad exigidos.
+    </p>
+    <div class="grid" style="grid-template-columns:repeat(2,1fr);gap:3mm;">
+      <div style="font-size:10.5pt;"><span class="check">✓</span>10 Microservicios + BFF + Gateway</div>
+      <div style="font-size:10.5pt;"><span class="check">✓</span>Diagramas C2 y C3 (patrón CSR)</div>
+      <div style="font-size:10.5pt;"><span class="check">✓</span>Clean Code en inglés + Javadoc</div>
+      <div style="font-size:10.5pt;"><span class="check">✓</span>Flyway DDL/DML separado</div>
+      <div style="font-size:10.5pt;"><span class="check">✓</span>@RestControllerAdvice global</div>
+      <div style="font-size:10.5pt;"><span class="check">✓</span>Tests (Service / Controller / Contexto)</div>
+      <div style="font-size:10.5pt;"><span class="check">✓</span>Swagger centralizado + Postman</div>
+      <div style="font-size:10.5pt;"><span class="check">✓</span>Docker Compose + PostgreSQL</div>
+    </div>
+  </div>
+  <div class="footer"><span>VeloUrbe · 2026</span><span>16</span></div>
+</div>
+
+</body>
+</html>
